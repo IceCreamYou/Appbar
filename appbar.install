@@ -1,0 +1,82 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ *   Installs the Appbar module.
+ */
+
+/**
+ * Implementation of hook_schema().
+ */
+function appbar_schema() {
+  $schema = array();
+  $schema['appbar'] = array(
+    'description' => 'Stores alerts for the appbar module.',
+    'fields' => array(
+      'tid' => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+        'description' => 'The Appbar alert ID.',
+      ),
+      'uid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The User ID of the user to whom the alert should be shown.',
+      ),
+      'status' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The read/unread status of the message.',
+      ),
+      'alert_time' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The time the alert was recorded.',
+      ),
+      'message' => array(
+        'type' => 'text',
+        'length' => 1024,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The text of the message.',
+      ),
+      'identifier' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'A unique identifier for the type of message.',
+      ),
+    ),
+    'indexes' => array(
+      'uid' => array('uid'),
+    ),
+    'primary key' => array('tid'),
+  );
+  return $schema;
+}
+
+/**
+ * Implementation of hook_install().
+ */
+function appbar_install() {
+  drupal_install_schema('appbar');
+  drupal_set_message(t('Appbar has been successfully installed. You should now configure the settings and permissions.'));
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function appbar_uninstall() {
+  drupal_uninstall_schema('appbar');
+  variable_del('appbar_menu');
+  variable_del('appbar_filter');
+  variable_del('appbar_hijack');
+}

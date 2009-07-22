@@ -1,0 +1,237 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ *   Adds an appbar to the bottom of the page for site users, like Facebook.
+ * @todo
+ *   Don't set as read until the list has been opened.
+ *   Allow a way to assign graphics to each of the links in the menu.
+ *   Add implementations of hook_user(), hook_nodeapi(), hook_comment(), etc. to call appbar_set_message().
+ *   Delete records on hook_user('delete').
+ *   Add a setting to determine on which pages the bar should show up.
+ *   Like admin_menu, add space at the bottom of the page for the bar.
+ *   Add ability to add more regions to the bar.
+ *   Save messages grabbed from drupal_set_message so they can show up later.
+ *   Don't show all new messages in the popup list, just new ones and/or the most recent 5, with a link to view more.
+ *   Bar shows all messages as new.
+ *   Add a way for the administrator to send messages to all users.
+ *   Only show the application bar to users with permission to see it.
+ */
+
+//============================
+//DRUPAL HOOK IMPLEMENTATIONS.
+//============================
+
+/**
+ * Implementation of hook_help().
+ */
+function appbar_help($path, $arg) {
+  $output = theme('appbar_bar');
+  if ($path == 'admin/help#appbar') {
+    $output .= '<p>'. t('The Appbar module adds a toolbar to the bottom of the page for site users, like the Application bar on Facebook.') .'</p>';
+  }
+  return $output;
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function appbar_menu() {
+  $items['admin/settings/appbar'] = array(
+    'title' => 'Appbar',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('appbar_admin'),
+    'access arguments' => array('access administration pages'),
+    'description' => 'Allows administrators to adjust certain display settings for Appbar.',
+    'file' => 'appbar.admin.inc',
+  );
+  return $items;
+}
+
+/**
+ * Implementation of hook_perm().
+ */
+function appbar_perm() {
+  return array('administer appbar links', 'use appbar');
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function appbar_theme($existing, $type, $theme, $path) {
+  return array(
+    'appbar_bar' => array(
+      'arguments' => array(),
+    ),
+    'appbar_items' => array(
+      'arguments' => array(),
+    ),
+    'appbar_alerts' => array(
+      'arguments' => array(),
+    ),
+    'appbar_time' => array(
+      'arguments' => array(
+        'status_time' => time(),
+      ),
+    ),
+  );
+}
+
+//================
+//THEME FUNCTIONS.
+//================
+
+/**
+ * Themes the appbar.
+ */
+function theme_appbar_bar() {
+  drupal_add_css(drupal_get_path('module', 'appbar') .'/appbar.css');
+  $content = '<div id="appbar_left">'. theme('appbar_items') .'</div><div id="appbar_right">'. theme('appbar_alerts') .'</div>';
+  $output = '<div id="appbar_container"><div id="appbar_sub"><div id="appbar">'. $content .'</div></div></div>';
+  return $output;
+}
+
+/**
+ * Gets the list of links to show on the appbar.
+ */
+function theme_appbar_items() {
+  $items = array_values(menu_navigation_links(variable_get('appbar_menu', 'secondary-links')));
+  $count = count($items);
+  $links = '<div id="appbar_items">';
+  foreach ($items as $key => $item) {
+    $links .= '<span class="appbar-item';
+    if ($key == 0) {
+      $links .= ' appbar-item-first';
+    }
+    //This is not an else if because if there is only one item then it is both first and last.
+    if ($key == $count - 1) {
+      $links .= ' appbar-item-last';
+    }
+    $links .= '">'. l($item['title'], $item['href']) .'</span>';
+  }
+  return $links .'</div>';
+}
+
+/**
+ * Themes the alerts for display in the appbar.
+ */
+function theme_appbar_alerts() {
+  drupal_add_js(drupal_get_path('module', 'appbar') .'/appbar.js');
+  $alerts = appbar_get_messages();
+  $count = count($alerts);
+  $output = '<span id="appbar_alerts" title="'. t('Alerts (@count new)', array('@count' => $count)) .'">'. t('Alerts') .' ('. t('%count new', array('%count' => $count)) .')</span>';
+  $output .= '<div id="appbar_alerts_list">';
+  foreach ($alerts as $alert) {
+    //We add the toolbarid- prefix to the class so that we don't accidentally end up with commonly themed classes like "status."
+    $item = '<div class="appbar_alert toolbar-id-'. check_plain($alert->identifier);
+    if ($alert->system == 1) {
+      $item .= ' appbar-system-message';
+    }
+    if ($alert->status == 1) {
+      $item .= ' appbar-new';
+    }
+    $item .= '">';
+    $item .= check_markup($alert->message, variable_get('appbar_filter', 1)) .'<span class="appbar_time">'. theme('appbar_time', $alert->alert_time) .'</span>';
+    $item .= '</div>';
+    $output .= $item;
+  }
+  $output .= '</div>';
+  return $output;
+}
+
+/**
+ * Returns a formatted string showing the time the alert was submitted.
+ *
+ * @param $status_time
+ *   The Unix timestamp for when the relevant alert was updated.
+ * @return
+ *   If the alert was submitted within the last 3 days, returns a "time ago"
+ *   date. If not, returns a normal (small) date. If zero, returns FALSE.
+ */
+function theme_appbar_time($time) {
+  if (!$time) {
+    return FALSE;
+  }
+  if (time() - $time < 60) {
+    return t('a moment ago');
+  }
+  else if (time() - $time < 60 * 60 * 24 * 3) {
+    return t('!time ago', array('!time' => format_interval(time() - $time, 1)));
+  }
+  else {
+    return format_date($time, 'small');
+  }
+}
+
+//==============
+//API FUNCTIONS.
+//==============
+
+/**
+ * Retrieves available alerts.
+ *
+ * @return
+ *   An array of message objects.
+ */
+function appbar_get_messages() {
+  $opt = variable_get('appbar_hijack', 'yes-clear');
+  $messages = array();
+  if ($opt == 'yes-clear') {
+    $messages = _appbar_reformat_messages(drupal_get_messages('status', TRUE));
+  }
+  if ($opt == 'yes-no') {
+    $messages = _appbar_reformat_messages(drupal_get_messages('status', FALSE));
+  }
+  global $user;
+  $alerts = array();
+  $result = db_query("SELECT * FROM {appbar} WHERE uid = %d ORDER BY status DESC, tid DESC", $user->uid);
+  while ($row = db_fetch_object($result)) {
+    $row->system = 0;
+    $alerts[] = $row;
+  }
+  //We're going to look at the messages, so they're no longer new.
+  db_query("UPDATE {appbar} SET status = 0 WHERE status = 1 AND uid = %d ORDER BY tid ASC");
+  //Messages come first, because they will always be new.
+  return array_merge($messages, $alerts);
+}
+
+/**
+ * Saves an alert for the appbar to pick up later.
+ *
+ * @param $identifier
+ *   A unique identifier for the type of message being recorded.
+ *   For example: node-new.
+ * @param $message
+ *   The message text, already translated.
+ * @param $uid
+ *   The User ID of the user to whom the message should be shown. Defaults to
+ *   the current user.
+ */
+function appbar_set_message($identifier, $message, $uid = 0) {
+  if (!$uid) {
+    $uid = $GLOBALS['user']->uid;
+  }
+  $object = array('alert_time' => time(), 'identifier' => $identifier, 'message' => $message, 'status' => 1, 'uid' => $uid);
+  drupal_write_record('appbar', $object);
+}
+
+//=================
+//HELPER FUNCTIONS.
+//=================
+
+/**
+ * Re-formats messages from the format returned by drupal_get_messages() to the
+ * format set by appbar_set_message().
+ */
+function _appbar_reformat_messages($messages_orig) {
+  if (empty($messages_orig['status'])) {
+    return array();
+  }
+  $messages = $messages_orig['status'];
+  $new = array();
+  foreach ($messages as $message) {
+    $new[] = (object) array('alert_time' => time(), 'identifier' => 'status', 'message' => $message, 'status' => 1, 'system' => 1, 'tid' => 0, 'uid' => $GLOBALS['user']->uid);
+  }
+  return $new;
+}

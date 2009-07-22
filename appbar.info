@@ -1,0 +1,4 @@
+; $Id$
+name = Appbar
+description = "Adds an appbar to the bottom of the page for site users, like Facebook."
+core = 6.x
