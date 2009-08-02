@@ -1,0 +1,100 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ *   This module is an example of a way to use the Appbar system to generate
+ *   alerts when certain events occur.
+ *
+ * @todo
+ *   Add an install file and an info file.
+ *   Finish filling out hook_nodeapi and hook_comment.
+ */
+ 
+/**
+ * Implementation of hook_user().
+ */
+function appbar_defaults_user($op, &$edit, &$account, $category = NULL) {
+  global $user;
+  if ($op == 'delete') {
+    //If the administrator deleted the user, there will be a system message saying so, so we don't need an appbar alert.
+    if ($user->uid != 1) {
+      appbar_set_message(t('User %deleted was deleted by %deleter', array('%deleted' => $account->name, '%deleter' => $user->name)), 'user-delete-1', 1);
+    }
+  }
+  else if ($op == 'insert') {
+    appbar_set_message(t('User %user has registered on @site.', array('%user' => $account->name, '@site' => variable_get('site_name', 'Drupal'))), 'user-insert-1', 1);
+  }
+}
+
+/**
+ * Implementation of hook_nodeapi().
+ */
+function appbar_defaults_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  global $user;
+  if ($op == 'delete' && $node->uid != $user->uid) {
+    appbar_set_message(t(''), 'node-delete', $node->uid);
+    appbar_set_message(t(''), 'node-delete-1', 1);
+  }
+  else if ($op == 'insert') {
+  }
+  else if ($op == 'update') {
+  }
+}
+
+/**
+ * Implementation of hook_comment().
+ */
+function appbar_defaults_comment(&$a1, $op) {
+  global $user;
+  if ($op == 'delete') {
+  }
+  else if ($op == 'insert') {
+  }
+  else if ($op == 'update') {
+  }
+}
+
+/**
+ * Implementation of hook_exit().
+ * Mostly copied from the user_visits() module.
+ */
+function appbar_defaults_exit() {
+  global $user;
+  $referer = referer_uri();
+  //Try not to count clicks from the user's other profile pages.
+  if (strpos(referer_uri(), arg(0) .'/'. arg(1))) {
+    return;
+  }
+  //Record visits on user profile pages.
+  if (arg(0) == 'user' && is_numeric(arg(1)) && !arg(2)) {
+    //Don't count viewing one's own profile.
+    if ($user->uid != arg(1)) {
+      appbar_set_message(t('%name visited your profile.', array('%name' => $user->name)), 'user-visit', arg(1));
+    }
+  }
+}
+
+/**
+ * Implementation of hook_appbar_id().
+ */
+function appbar_defaults_appbar_id() {
+  //It doesn't make sense to include 'status' in this array because we have an explicit setting for it.
+  return array(
+    'announcement' => t('Announcement from the administrator to all users'),
+    'comment-delete' => t('Comment deletion (alerts author)'),
+    'comment-delete-1' => t('Comment deletion (alerts User 1)'),
+    'comment-insert-1' => t('Comment insertion (alerts User 1)'),
+    'comment-update' => t('Comment updating (alerts author)'),
+    'comment-update-1' => t('Comment updating (alerts User 1)'),
+    'misc' => t('Miscellaneous'),
+    'node-delete' => t('Node deletion (alerts author)'),
+    'node-delete-1' => t('Node deletion (alerts User 1)'),
+    'node-insert-1' => t('Node insertion (alerts User 1)'),
+    'node-update' => t('Node updating (alerts author)'),
+    'node-update-1' => t('Node updating (alerts author)'),
+    'user-delete-1' => t('User deletion (alerts User 1)'),
+    'user-insert-1' => t('User insertion (alerts User 1)'),
+    'user-visit' => t('User profile viewed (alerts profile owner)'),
+  );
+}
