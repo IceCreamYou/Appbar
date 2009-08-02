@@ -6,8 +6,6 @@
  *   Adds an application toolbar to the bottom of the page for site users, like
  *   Facebook. The bar keeps track of alerts from the site and can hold links.
  * @todo
- *   It seems that the JQuery is not getting run.
- *   Messages seem to have problems being recorded, especially system messages, but only some of the time.
  *   Allow a way to assign graphics to each of the links in the menu.
  *   Add Facebook Application Menu-esque sub-menu-item suckerfish-style drop-up-on-click menu support.
  */
@@ -20,14 +18,9 @@
  * Implementation of hook_help().
  */
 function appbar_help($path, $arg) {
-  $output = '';
-  //@todo: This should probably go in hook_init() instead.
-  $output .= theme('appbar_bar');
-
   if ($path == 'admin/help#appbar') {
-    $output .= '<p>'. t('The Appbar module adds a toolbar to the bottom of the page for site users, like the Application bar on Facebook.') .'</p>';
+    return '<p>'. t('The Appbar module adds a toolbar to the bottom of the page for site users, like the Application bar on Facebook.') .'</p>';
   }
-  return $output;
 }
 
 /**
@@ -87,6 +80,29 @@ function appbar_user($op, &$edit, &$account, $category = NULL) {
 }
 
 /**
+ * Implementation of hook_init().
+ */
+function appbar_init() {
+  //We don't do a full _appbar_show() because _appbar_prepare() checks
+  //_appbar_show(TRUE).
+  if (_appbar_vis()) {
+    _appbar_prepare();
+    //Record system messages as Appbar alerts if applicable.
+    if (_appbar_show(TRUE)) {
+      _appbar_get_system_messages();
+    }
+  }
+}
+
+/**
+ * Implementation of hook_footer().
+ */
+function appbar_footer($main = 0) {
+  //The _appbar_show() check is in the theme function.
+  return theme('appbar_bar');
+}
+
+/**
  * Implementation of hook_action_info().
  */
 function appbar_action_info() {
@@ -114,10 +130,11 @@ function appbar_appbar_region() {
  * Implementation of hook_appbar_id().
  */
 function appbar_appbar_id() {
+  //It doesn't make sense to include the "status" type here because there is an
+  //explicit setting for it.
   return array(
     'announcement' => t('Announcement from the administrator to all users'),
     'misc' => t('Miscellaneous'),
-    'status' => t('System status messages. (Depends on above settings.)'),
   );
 }
 
@@ -133,7 +150,9 @@ function appbar_theme($existing, $type, $theme, $path) {
       'arguments' => array(),
     ),
     'appbar_bar' => array(
-      'arguments' => array(),
+      'arguments' => array(
+        'check_vis' => TRUE,
+      ),
     ),
     'appbar_items' => array(
       'arguments' => array(),
@@ -151,22 +170,29 @@ function appbar_theme($existing, $type, $theme, $path) {
 //================
 
 /**
- * Themes the appbar.
+ * Themes the Appbar.
+ *
+ * @param $check_vis
+ *   If TRUE, the Appbar will only show up if it's on a page specified by the
+ *   administrator. Otherwise, it will show up on the current page (as long as
+ *   the current user has permission to see it).
  */
-function theme_appbar_bar() {
-  if (_appbar_show()) {
-    drupal_add_js(array('appbar' => array(
-      'count' => appbar_get_messages(TRUE),
-      'delay' => variable_get('appbar_time', 30000),
-    )), 'setting');
-    $path = drupal_get_path('module', 'appbar');
-    drupal_add_css($path .'/appbar.css');
-    drupal_add_js($path .'/appbar.js');
+function theme_appbar_bar($check_vis = TRUE) {
+  //If the visibility check fails, the CSS and JS won't have been added to the
+  //page and system status messages won't have been recorded (in hook_init()) so
+  //we need to make sure these things happen.
+  if (!$check_vis && !_appbar_vis()) {
+    _appbar_prepare();
+    if (_appbar_show(TRUE)) {
+      _appbar_get_system_messages();
+    }
+  }
+  if (_appbar_show() || (!$check_vis && _appbar_show(TRUE))) {
     $regions = '';
     foreach (module_invoke_all('appbar_region') as $name => $region) {
       $regions .= '<div id="'. $name .'">'. $region .'</div>';
     }
-    if (trim($regions)) {
+    if ($regions) {
       return '<div id="appbar_container"><div id="appbar_sub"><div id="appbar">'. $regions .'</div></div></div>';
     }
   }
@@ -197,8 +223,8 @@ function theme_appbar_items() {
  * Themes the alerts for display in the appbar.
  */
 function theme_appbar_alerts() {
-  //The JQuery inserts the correct count of new messages into the following span.
-  $count = '<span id="appbar_count"></span>';
+  //The JQuery overwrites the correct count of new messages into the following span.
+  $count = '<span id="appbar_count">'. appbar_get_messages(TRUE) .'</span>';
   $output = '<span id="appbar_alerts">'. t('Alerts (!count new)', array('!count' => $count)) .'</span>';
   //The JQuery will insert the contents of theme('appbar_alerts_list') into the following div.
   $output .= '<div id="appbar_alerts_list"></div>';
@@ -280,15 +306,6 @@ function theme_appbar_time($time) {
  *   of message objects.
  */
 function appbar_get_messages($get_new_count = FALSE) {
-  //Get messages if applicable.
-  $opt = variable_get('appbar_hijack', 'yes-clear');
-  $messages = array();
-  if ($opt == 'yes-clear') {
-    $messages = _appbar_reformat_messages(drupal_get_messages('status', TRUE));
-  }
-  if ($opt == 'yes-no') {
-    $messages = _appbar_reformat_messages(drupal_get_messages('status', FALSE));
-  }
   //Get new alerts.
   global $user;
   $alerts = array();
@@ -302,7 +319,7 @@ function appbar_get_messages($get_new_count = FALSE) {
     }
     $alerts[] = $row;
   }
-  $count = count($alerts) + count($messages);
+  $count = count($alerts);
   if ($get_new_count) {
     return $count;
   }
@@ -318,21 +335,8 @@ function appbar_get_messages($get_new_count = FALSE) {
     $alerts[] = $row;
   }
   
-  //Messages are now cleared, but since the user might not look at them and they
-  //don't show up on the page, they might not be seen at all. Therefore, we
-  //need to save them.
-  if (!empty($messages) && $opt == 'yes-clear') {
-    foreach ($messages as $message) {
-      unset($message->system);
-      drupal_write_record('appbar', $message);
-    }
-  }
-
-  //We mark messages as read when they are retrieved because there is no secure
-  //way to pre-retrieve them and mark them read later.
   db_query("UPDATE {appbar} SET status = 0 WHERE status = 1 AND uid = %d ORDER BY tid ASC", $GLOBALS['user']->uid);
-  //Messages come first, because they will always be new.
-  return array_merge($messages, $alerts);
+  return $alerts;
 }
 
 /**
@@ -397,10 +401,13 @@ function _appbar_reformat_messages($messages_orig) {
 /**
  * Checks user access, user authentication, and visibility settings to determine
  * whether to show the Appbar.
+ *
+ * @param $skip_vis
+ *   If TRUE, skips the visibility check.
  * @return
  *   TRUE if the Appbar should be shown; FALSE otherwise.
  */
-function _appbar_show() {
+function _appbar_show($skip_vis = FALSE) {
   if (!user_access('use appbar')) {
     return FALSE;
   }
@@ -416,28 +423,36 @@ function _appbar_show() {
       return FALSE;
     }
   }
-  //Match path if necessary.
-  if (variable_get('appbar_vis_list', '')) {
-    if (variable_get('appbar_page_vis', 0) < 2) {
-      $path = drupal_get_path_alias($_GET['q']);
-      //Compare with the internal and path alias (if any).
-      $page_match = drupal_match_path($path, variable_get('appbar_vis_list', ''));
-      if ($path != $_GET['q'] && !$page_match) {
-        $page_match = drupal_match_path($_GET['q'], variable_get('appbar_vis_list', ''));
-      }
-      if (variable_get('appbar_page_vis', 0) == 1 && $page_match) {
-        return TRUE;
-      }
-      else if (variable_get('appbar_page_vis', 0) == 0 && !$page_match) {
-        return TRUE;
-      }
-      return FALSE;
-    }
-    else {
-      return drupal_eval(variable_get('appbar_vis_list', ''));
-    }
+  if (!$skip_vis) {
+    return _appbar_vis();
   }
   return TRUE;
+}
+
+/**
+ * Checks to see if the Appbar should show up on the current page.
+ * @return
+ *   TRUE if the Appbar should show up; FALSE otherwise.
+ */
+function _appbar_vis() {
+  if (variable_get('appbar_page_vis', 0) < 2) {
+    $path = drupal_get_path_alias($_GET['q']);
+    //Compare with the internal and path alias (if any).
+    $page_match = drupal_match_path($path, variable_get('appbar_vis_list', ''));
+    if ($path != $_GET['q'] && !$page_match) {
+      $page_match = drupal_match_path($_GET['q'], variable_get('appbar_vis_list', ''));
+    }
+    if (variable_get('appbar_page_vis', 0) == 1 && $page_match) {
+      return TRUE;
+    }
+    else if (variable_get('appbar_page_vis', 0) == 0 && !$page_match) {
+      return TRUE;
+    }
+    return FALSE;
+  }
+  else {
+    return drupal_eval(variable_get('appbar_vis_list', ''));
+  }
 }
 
 /**
@@ -450,6 +465,40 @@ function _appbar_show() {
  */
 function _appbar_hide_alerts($account) {
   return user_access("hide actions from others' appbar", $account);
+}
+
+/**
+ * Adds the CSS and JS to the page.
+ */
+function _appbar_prepare() {
+  if (_appbar_show(TRUE)) {
+    drupal_add_js(array('appbar' => array(
+      'delay' => variable_get('appbar_time', 20000),
+    )), 'setting');
+    $path = drupal_get_path('module', 'appbar');
+    drupal_add_css($path .'/appbar.css');
+    drupal_add_js($path .'/appbar.js');
+  }
+}
+
+/**
+ * Retrieves system messages if applicable.
+ */
+function _appbar_get_system_messages() {
+  $opt = variable_get('appbar_hijack', 'no');
+  $messages = array();
+  if ($opt == 'yes-clear') {
+    $messages = _appbar_reformat_messages(drupal_get_messages('status', TRUE));
+  }
+  if ($opt == 'yes-no') {
+    $messages = _appbar_reformat_messages(drupal_get_messages('status', FALSE));
+  }
+  if (!empty($messages)) {
+    foreach ($messages as $message) {
+      unset($message->system);
+      drupal_write_record('appbar', $message);
+    }
+  }
 }
 
 /**

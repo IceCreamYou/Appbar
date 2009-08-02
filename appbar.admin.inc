@@ -33,14 +33,10 @@ function appbar_admin(&$form_state) {
   $form['appbar_hijack'] = array(
     '#type' => 'radios',
     '#title' => t('Hijack system messages for alerts'),
-    '#description' => t('If you choose to show alerts on the page, they will not be saved in the Appbar table in the database.'.
-      ' This means that they will only appear in the Appbar alert dialog on the page where they occurred.'.
-      ' If you choose to hide system messages from the page and only show them in the Appbar alert dialog,'.
-      ' the messages will be saved in the Appbar table in the database so that they can be viewed later.'.
-      ' However, please note that this can be confusing to users if a message meant to show up on one'.
-      ' specific page is viewed in the alert dialog in another.'),
+    '#description' => t('If you choose to show system messages in the Appbar alert dialog, the messages will be saved in the Appbar table in the database so that they can be viewed later.')
+      .' '. t('However, please note that this can be confusing to users if a message meant to show up on one specific page is viewed in the alert dialog on another.'),
     '#required' => TRUE,
-    '#default_value' => variable_get('appbar_hijack', 'yes-clear'),
+    '#default_value' => variable_get('appbar_hijack', 'no'),
     '#options' => array(
       'no' => t('Do not hijack system messages'),
       'yes-clear' => t('Use system message for alerts, and do not also show them above the content area'),
@@ -61,7 +57,7 @@ function appbar_admin(&$form_state) {
     '#title' => t('Refresh rate'),
     '#description' => t('The number of milliseconds Appbar will delay before checking to see if there are any new alerts. (There are 1000 milliseconds in a second.) Be very careful with this, as it can quickly eat your server resources.'),
     '#required' => TRUE,
-    '#default_value' => variable_get('appbar_time', 30000),
+    '#default_value' => variable_get('appbar_time', 20000),
   );
   $types = module_invoke_all('appbar_id');
   $form['appbar_types'] = array(
@@ -156,7 +152,7 @@ function appbar_admin_submit($form, &$form_state) {
   variable_set('appbar_user_vis', $form_state['values']['user_vis_settings']['appbar_user_vis']);
   variable_set('appbar_page_vis', $form_state['values']['page_vis_settings']['appbar_page_vis']);
   variable_set('appbar_vis_list', $form_state['values']['page_vis_settings']['appbar_vis_list']);
-  **/
+   */
   $message = trim(filter_xss_admin($form_state['values']['appbar_admin']));
   if (!$message) {
     appbar_set_message($message, 'announcement', 'all');
