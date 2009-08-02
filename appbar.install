@@ -32,7 +32,7 @@ function appbar_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
-        'description' => 'The read/unread status of the message.',
+        'description' => 'The read/unread status of the message. 1 is unread, 0 is read.',
       ),
       'alert_time' => array(
         'type' => 'int',
@@ -68,7 +68,7 @@ function appbar_schema() {
  */
 function appbar_install() {
   drupal_install_schema('appbar');
-  drupal_set_message(t('Appbar has been successfully installed. You should now configure the settings and permissions.'));
+  drupal_set_message(t('Appbar has been successfully installed. You should now <a href="/admin/settings/appbar">configure the settings and permissions</a>.'));
 }
 
 /**
@@ -76,7 +76,13 @@ function appbar_install() {
  */
 function appbar_uninstall() {
   drupal_uninstall_schema('appbar');
+  variable_del('appbar_min');
   variable_del('appbar_menu');
+  variable_get('appbar_time');
+  variable_del('appbar_types');
   variable_del('appbar_filter');
   variable_del('appbar_hijack');
+  variable_del('appbar_page_vis');
+  variable_del('appbar_user_vis');
+  variable_del('appbar_vis_list');
 }

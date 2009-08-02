@@ -2,6 +2,7 @@
 
 #appbar_container {
   bottom: 0;
+  display: none;
   font-size: 11px;
   height: 25px;
   padding: 0;
@@ -46,8 +47,9 @@
   border: 1px #B5B5B5 solid;
   bottom: 26px;
   display: none;
-  height: 249px;
-  margin: 0 15px 0 0;
+  /* margin: 0 15px 0 0; */
+  max-height: 450px;
+  min-height: 249px;
   overflow-x: hidden;
   overflow-y: auto;
   padding: 0;

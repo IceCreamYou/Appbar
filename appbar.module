@@ -3,20 +3,13 @@
 
 /**
  * @file
- *   Adds an appbar to the bottom of the page for site users, like Facebook.
+ *   Adds an application toolbar to the bottom of the page for site users, like
+ *   Facebook. The bar keeps track of alerts from the site and can hold links.
  * @todo
- *   Don't set as read until the list has been opened.
+ *   It seems that the JQuery is not getting run.
+ *   Messages seem to have problems being recorded, especially system messages, but only some of the time.
  *   Allow a way to assign graphics to each of the links in the menu.
- *   Add implementations of hook_user(), hook_nodeapi(), hook_comment(), etc. to call appbar_set_message().
- *   Delete records on hook_user('delete').
- *   Add a setting to determine on which pages the bar should show up.
- *   Like admin_menu, add space at the bottom of the page for the bar.
- *   Add ability to add more regions to the bar.
- *   Save messages grabbed from drupal_set_message so they can show up later.
- *   Don't show all new messages in the popup list, just new ones and/or the most recent 5, with a link to view more.
- *   Bar shows all messages as new.
- *   Add a way for the administrator to send messages to all users.
- *   Only show the application bar to users with permission to see it.
+ *   Add Facebook Application Menu-esque sub-menu-item suckerfish-style drop-up-on-click menu support.
  */
 
 //============================
@@ -27,7 +20,10 @@
  * Implementation of hook_help().
  */
 function appbar_help($path, $arg) {
-  $output = theme('appbar_bar');
+  $output = '';
+  //@todo: This should probably go in hook_init() instead.
+  $output .= theme('appbar_bar');
+
   if ($path == 'admin/help#appbar') {
     $output .= '<p>'. t('The Appbar module adds a toolbar to the bottom of the page for site users, like the Application bar on Facebook.') .'</p>';
   }
@@ -46,6 +42,22 @@ function appbar_menu() {
     'description' => 'Allows administrators to adjust certain display settings for Appbar.',
     'file' => 'appbar.admin.inc',
   );
+  $items['appbar/refresh/list'] = array(
+    'title' => 'Refresh Appbar',
+    'page callback' => '_appbar_page',
+    'page arguments' => array('list'),
+    'access arguments' => array('use appbar'),
+    'description' => 'Gets the HTML for the alert dialog for use in JQuery.',
+    'type' => MENU_CALLBACK,
+  );
+  $items['appbar/refresh/count'] = array(
+    'title' => 'Refresh Appbar',
+    'page callback' => '_appbar_page',
+    'page arguments' => array('count'),
+    'access arguments' => array('use appbar'),
+    'description' => 'Gets the number of new alerts.',
+    'type' => MENU_CALLBACK,
+  );
   return $items;
 }
 
@@ -53,7 +65,60 @@ function appbar_menu() {
  * Implementation of hook_perm().
  */
 function appbar_perm() {
-  return array('administer appbar links', 'use appbar');
+  return array('use appbar', "hide actions from others' appbar");
+}
+
+/**
+ * Implementation of hook_user().
+ */
+function appbar_user($op, &$edit, &$account, $category = NULL) {
+  if ($op == 'delete') {
+    db_query("DELETE FROM {appbar} WHERE uid = %d", $account->uid);
+  }
+  else if ($op == 'form' && $category == 'account' && variable_get('appbar_user_vis', 0) != 0) {
+    $data = unserialize($account->data);
+    $form['appbar_user_vis'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Show Application Toolbar'),
+      '#default_value' => isset($data['appbar_user_vis']) ? $data['appbar_user_vis'] : 1,
+    );
+    return $form;
+  }
+}
+
+/**
+ * Implementation of hook_action_info().
+ */
+function appbar_action_info() {
+  return array(
+    'appbar_set_message_action' => array(
+      'description' => t('Set an alert in the Application Toolbar.'),
+      'type' => 'appbar',
+      'configurable' => TRUE,
+      'hooks' => array('any' => TRUE),
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_appbar_region().
+ */
+function appbar_appbar_region() {
+  return array(
+    'appbar_left' => theme('appbar_items'),
+    'appbar_right' => theme('appbar_alerts'),
+  );
+}
+
+/**
+ * Implementation of hook_appbar_id().
+ */
+function appbar_appbar_id() {
+  return array(
+    'announcement' => t('Announcement from the administrator to all users'),
+    'misc' => t('Miscellaneous'),
+    'status' => t('System status messages. (Depends on above settings.)'),
+  );
 }
 
 /**
@@ -61,13 +126,16 @@ function appbar_perm() {
  */
 function appbar_theme($existing, $type, $theme, $path) {
   return array(
+    'appbar_alerts' => array(
+      'arguments' => array(),
+    ),
+    'appbar_alerts_list' => array(
+      'arguments' => array(),
+    ),
     'appbar_bar' => array(
       'arguments' => array(),
     ),
     'appbar_items' => array(
-      'arguments' => array(),
-    ),
-    'appbar_alerts' => array(
       'arguments' => array(),
     ),
     'appbar_time' => array(
@@ -86,10 +154,22 @@ function appbar_theme($existing, $type, $theme, $path) {
  * Themes the appbar.
  */
 function theme_appbar_bar() {
-  drupal_add_css(drupal_get_path('module', 'appbar') .'/appbar.css');
-  $content = '<div id="appbar_left">'. theme('appbar_items') .'</div><div id="appbar_right">'. theme('appbar_alerts') .'</div>';
-  $output = '<div id="appbar_container"><div id="appbar_sub"><div id="appbar">'. $content .'</div></div></div>';
-  return $output;
+  if (_appbar_show()) {
+    drupal_add_js(array('appbar' => array(
+      'count' => appbar_get_messages(TRUE),
+      'delay' => variable_get('appbar_time', 30000),
+    )), 'setting');
+    $path = drupal_get_path('module', 'appbar');
+    drupal_add_css($path .'/appbar.css');
+    drupal_add_js($path .'/appbar.js');
+    $regions = '';
+    foreach (module_invoke_all('appbar_region') as $name => $region) {
+      $regions .= '<div id="'. $name .'">'. $region .'</div>';
+    }
+    if (trim($regions)) {
+      return '<div id="appbar_container"><div id="appbar_sub"><div id="appbar">'. $regions .'</div></div></div>';
+    }
+  }
 }
 
 /**
@@ -117,22 +197,46 @@ function theme_appbar_items() {
  * Themes the alerts for display in the appbar.
  */
 function theme_appbar_alerts() {
-  drupal_add_js(drupal_get_path('module', 'appbar') .'/appbar.js');
+  //The JQuery inserts the correct count of new messages into the following span.
+  $count = '<span id="appbar_count"></span>';
+  $output = '<span id="appbar_alerts">'. t('Alerts (!count new)', array('!count' => $count)) .'</span>';
+  //The JQuery will insert the contents of theme('appbar_alerts_list') into the following div.
+  $output .= '<div id="appbar_alerts_list"></div>';
+  return $output;
+}
+
+/**
+ * Themes the list of Appbar alerts.
+ */
+function theme_appbar_alerts_list() {
+  $output = '';
   $alerts = appbar_get_messages();
   $count = count($alerts);
-  $output = '<span id="appbar_alerts" title="'. t('Alerts (@count new)', array('@count' => $count)) .'">'. t('Alerts') .' ('. t('%count new', array('%count' => $count)) .')</span>';
-  $output .= '<div id="appbar_alerts_list">';
-  foreach ($alerts as $alert) {
-    //We add the toolbarid- prefix to the class so that we don't accidentally end up with commonly themed classes like "status."
+  foreach ($alerts as $key => $alert) {
+    //We add the toolbar-id- prefix to the class so that we don't accidentally end up with commonly themed classes like "status."
     $item = '<div class="appbar_alert toolbar-id-'. check_plain($alert->identifier);
+    //The system property is not stored in the database.
     if ($alert->system == 1) {
       $item .= ' appbar-system-message';
     }
     if ($alert->status == 1) {
       $item .= ' appbar-new';
     }
+    if ($key == 0) {
+      $item .= ' appbar-alert-first';
+    }
+    if ((int) $key === $count) {
+      $item .= ' appbar-alert-last';
+    }
     $item .= '">';
-    $item .= check_markup($alert->message, variable_get('appbar_filter', 1)) .'<span class="appbar_time">'. theme('appbar_time', $alert->alert_time) .'</span>';
+    if ($alert->system == 1) {
+      $item .= check_markup($alert->message, variable_get('appbar_filter', 1));
+    }
+    //Don't run an input filter over a system message; it should be already processed (run through t()).
+    else {
+      $item .= $alert->message;
+    }
+    $item .= '<span class="appbar_time">'. theme('appbar_time', $alert->alert_time) .'</span>';
     $item .= '</div>';
     $output .= $item;
   }
@@ -171,10 +275,12 @@ function theme_appbar_time($time) {
 /**
  * Retrieves available alerts.
  *
- * @return
- *   An array of message objects.
+ * @param $get_new_count
+ *   If TRUE, returns only the count of new alerts. Otherwise, returns an array
+ *   of message objects.
  */
-function appbar_get_messages() {
+function appbar_get_messages($get_new_count = FALSE) {
+  //Get messages if applicable.
   $opt = variable_get('appbar_hijack', 'yes-clear');
   $messages = array();
   if ($opt == 'yes-clear') {
@@ -183,37 +289,89 @@ function appbar_get_messages() {
   if ($opt == 'yes-no') {
     $messages = _appbar_reformat_messages(drupal_get_messages('status', FALSE));
   }
+  //Get new alerts.
   global $user;
   $alerts = array();
-  $result = db_query("SELECT * FROM {appbar} WHERE uid = %d ORDER BY status DESC, tid DESC", $user->uid);
+  $result = db_query("SELECT * FROM {appbar} WHERE
+    (uid = %d OR (uid = 0 AND alert_time > (SELECT created FROM {users} WHERE uid = %d)))
+    AND status = 1 ORDER BY tid DESC", $user->uid, $user->uid);
+  while ($row = db_fetch_object($result)) {
+    $row->system = 0;
+    if ($row->identifier == 'announcement' || $row->identifier == 'status') {
+      $row->system = 1;
+    }
+    $alerts[] = $row;
+  }
+  $count = count($alerts) + count($messages);
+  if ($get_new_count) {
+    return $count;
+  }
+  //We need to get at least the minimum number of alerts, so check the old ones too if necessary.
+  if ($count < variable_get('appbar_min', 5)) {
+    $remaining = variable_get('appbar_min', 5) - $count;
+    $result = db_query_range("SELECT * FROM {appbar} WHERE
+      (uid = %d OR (uid = 0 AND alert_time > (SELECT created FROM {users} WHERE uid = %d)))
+      AND status = 0 ORDER BY tid DESC", $user->uid, $user->uid, 0, $remaining);
+  }
   while ($row = db_fetch_object($result)) {
     $row->system = 0;
     $alerts[] = $row;
   }
-  //We're going to look at the messages, so they're no longer new.
-  db_query("UPDATE {appbar} SET status = 0 WHERE status = 1 AND uid = %d ORDER BY tid ASC");
+  
+  //Messages are now cleared, but since the user might not look at them and they
+  //don't show up on the page, they might not be seen at all. Therefore, we
+  //need to save them.
+  if (!empty($messages) && $opt == 'yes-clear') {
+    foreach ($messages as $message) {
+      unset($message->system);
+      drupal_write_record('appbar', $message);
+    }
+  }
+
+  //We mark messages as read when they are retrieved because there is no secure
+  //way to pre-retrieve them and mark them read later.
+  db_query("UPDATE {appbar} SET status = 0 WHERE status = 1 AND uid = %d ORDER BY tid ASC", $GLOBALS['user']->uid);
   //Messages come first, because they will always be new.
   return array_merge($messages, $alerts);
 }
 
 /**
- * Saves an alert for the appbar to pick up later.
+ * Saves an alert for the appbar to pick up later. This is the most important
+ * function for other module developers looking to integrate with Appbar.
  *
+ * @param $message
+ *   The message text, already translated.
  * @param $identifier
  *   A unique identifier for the type of message being recorded.
  *   For example: node-new.
- * @param $message
- *   The message text, already translated.
  * @param $uid
- *   The User ID of the user to whom the message should be shown. Defaults to
- *   the current user.
+ *   The User ID of the user to whom the message should be shown. If NULL (the
+ *   default) the current user will be used. 'all' sets the alert for each user.
  */
-function appbar_set_message($identifier, $message, $uid = 0) {
-  if (!$uid) {
-    $uid = $GLOBALS['user']->uid;
+function appbar_set_message($message, $identifier = 'misc', $uid = NULL) {
+  global $user;
+  if ($uid === NULL) {
+    $uid = $user->uid;
   }
-  $object = array('alert_time' => time(), 'identifier' => $identifier, 'message' => $message, 'status' => 1, 'uid' => $uid);
-  drupal_write_record('appbar', $object);
+  //If the person who did the action ($user) is in a hidden role, don't record.
+  if ($uid != $user->uid && _appbar_hide_alerts($user) && $uid != 'all') {
+    return;
+  }
+  //Don't record actions for the anonymous user.
+  if ($uid == 0) {
+    return;
+  }
+  if ($uid == 'all') {
+    $uid = 0;
+  }
+  foreach (variable_get('appbar_types', array()) as $type) {
+    //If the category is disabled, $type is zero, so it won't match the identifier.
+    if ($identifier == $type) {
+      $object = array('alert_time' => time(), 'identifier' => $identifier, 'message' => $message, 'status' => 1, 'uid' => $uid);
+      drupal_write_record('appbar', $object);
+      break;
+    }
+  }
 }
 
 //=================
@@ -234,4 +392,131 @@ function _appbar_reformat_messages($messages_orig) {
     $new[] = (object) array('alert_time' => time(), 'identifier' => 'status', 'message' => $message, 'status' => 1, 'system' => 1, 'tid' => 0, 'uid' => $GLOBALS['user']->uid);
   }
   return $new;
+}
+
+/**
+ * Checks user access, user authentication, and visibility settings to determine
+ * whether to show the Appbar.
+ * @return
+ *   TRUE if the Appbar should be shown; FALSE otherwise.
+ */
+function _appbar_show() {
+  if (!user_access('use appbar')) {
+    return FALSE;
+  }
+  global $user;
+  if (!$user->uid) {
+    return FALSE;
+  }
+  $rids = array_keys($user->roles);
+  //Use the user's visibility setting, if necessary.
+  $data = unserialize($user->data);
+  if (variable_get('appbar_user_vis', 0) != 0) {
+    if (!$data['appbar_user_vis']) {
+      return FALSE;
+    }
+  }
+  //Match path if necessary.
+  if (variable_get('appbar_vis_list', '')) {
+    if (variable_get('appbar_page_vis', 0) < 2) {
+      $path = drupal_get_path_alias($_GET['q']);
+      //Compare with the internal and path alias (if any).
+      $page_match = drupal_match_path($path, variable_get('appbar_vis_list', ''));
+      if ($path != $_GET['q'] && !$page_match) {
+        $page_match = drupal_match_path($_GET['q'], variable_get('appbar_vis_list', ''));
+      }
+      if (variable_get('appbar_page_vis', 0) == 1 && $page_match) {
+        return TRUE;
+      }
+      else if (variable_get('appbar_page_vis', 0) == 0 && !$page_match) {
+        return TRUE;
+      }
+      return FALSE;
+    }
+    else {
+      return drupal_eval(variable_get('appbar_vis_list', ''));
+    }
+  }
+  return TRUE;
+}
+
+/**
+ * Checks whether a user is in a role whose activity should not be recorded.
+ *
+ * @param $account
+ *   The user account object of the user to check for visibility.
+ * @return
+ *   TRUE if the user's activity should NOT be recorded; FALSE otherwise.
+ */
+function _appbar_hide_alerts($account) {
+  return user_access("hide actions from others' appbar", $account);
+}
+
+/**
+ * Shows the right stuff on the relevant callback page.
+ *
+ * @param $page
+ *   Which page we're looking at.
+ */
+function _appbar_page($page = 'count') {
+  switch ($page) {
+    case 'count':
+      echo appbar_get_messages(TRUE);
+      break;
+    case 'list':
+      echo theme('appbar_alerts_list');
+      break;
+    default:
+      echo 'error';
+  }
+}
+
+//=============
+//INTEGRATIONS.
+//=============
+
+/**
+ * Sets a message via Triggers/Actions.
+ */
+function appbar_set_message_action(&$object, $context = array()) {
+  global $user;
+  if ($context['hook'] == 'nodeapi') {
+    $context['hook'] = 'node';
+  }
+  if ($context['uid'] == 'user') {
+    $context['uid'] = $user->uid;
+  }
+  appbar_set_message(str_replace(array(theme('username', $user), $context['hook'], $context['op']), array('!user', '!object', '!op'), $context['message']), 'misc', $context['uid']);
+}
+
+/**
+ * Configuration form for the Set Appbar Message action.
+ */
+function appbar_set_message_action_form($context) {
+  $form['message'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Message'),
+    '#description' => t('You can use the following substitutions: !user is the name of the user who performed the action; !object is the name of the object acted upon (i.e. node, comment, etc.); !op is the action taken.'),
+    '#required' => TRUE,
+    '#rows' => 5,
+  );
+  $form['destination'] = array(
+    '#type' => 'select',
+    '#title' => t('Show message to'),
+    '#description' => t('The alert will be registered for the person or people specified above.'),
+    '#required' => TRUE,
+    '#default_value' => 'user',
+    '#options' => array('all' => t('All users'), 'user' => t('The user who performed the action'), 1 => t('User 1')),
+  );
+  return $form;
+}
+
+/**
+ * Submit function for the configuration form for the Set Appbar Message action.
+ */
+function appbar_set_message_action_submit($form, &$form_state) {
+  return array(
+    'message' => filter_xss($form_state['values']['message']),
+    'uid' => $form_state['values']['destination'],
+  );
 }
