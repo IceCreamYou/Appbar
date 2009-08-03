@@ -121,8 +121,8 @@ function appbar_action_info() {
  */
 function appbar_appbar_region() {
   return array(
-    'appbar_left' => theme('appbar_items'),
-    'appbar_right' => theme('appbar_alerts'),
+    'appbar_menu' => theme('appbar_items'),
+    'appbar_messages' => theme('appbar_alerts'),
   );
 }
 
@@ -239,8 +239,8 @@ function theme_appbar_alerts_list() {
   $alerts = appbar_get_messages();
   $count = count($alerts);
   foreach ($alerts as $key => $alert) {
-    //We add the toolbar-id- prefix to the class so that we don't accidentally end up with commonly themed classes like "status."
-    $item = '<div class="appbar_alert toolbar-id-'. check_plain($alert->identifier);
+    //We add the appbar-id- prefix to the class so that we don't accidentally end up with commonly themed classes like "status."
+    $item = '<div class="appbar_alert appbar-id-'. check_plain($alert->identifier);
     //The system property is not stored in the database.
     if ($alert->system == 1) {
       $item .= ' appbar-system-message';
@@ -266,7 +266,6 @@ function theme_appbar_alerts_list() {
     $item .= '</div>';
     $output .= $item;
   }
-  $output .= '</div>';
   return $output;
 }
 
@@ -332,6 +331,9 @@ function appbar_get_messages($get_new_count = FALSE) {
   }
   while ($row = db_fetch_object($result)) {
     $row->system = 0;
+    if ($row->identifier == 'announcement' || $row->identifier == 'status') {
+      $row->system = 1;
+    }
     $alerts[] = $row;
   }
   
@@ -368,13 +370,9 @@ function appbar_set_message($message, $identifier = 'misc', $uid = NULL) {
   if ($uid == 'all') {
     $uid = 0;
   }
-  foreach (variable_get('appbar_types', array()) as $type) {
-    //If the category is disabled, $type is zero, so it won't match the identifier.
-    if ($identifier == $type) {
-      $object = array('alert_time' => time(), 'identifier' => $identifier, 'message' => $message, 'status' => 1, 'uid' => $uid);
-      drupal_write_record('appbar', $object);
-      break;
-    }
+  if (in_array($identifier, variable_get('appbar_types', array()))) {
+    $object = array('alert_time' => time(), 'identifier' => $identifier, 'message' => $message, 'status' => 1, 'uid' => $uid);
+    drupal_write_record('appbar', $object);
   }
 }
 
