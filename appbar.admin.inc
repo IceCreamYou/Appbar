@@ -18,6 +18,8 @@ function appbar_admin(&$form_state) {
     '#default_value' => variable_get('appbar_menu', 'secondary-links'),
     '#options' => menu_get_menus(),
   );
+  /*
+  //This section has been commented out because messages are run through t() and therefore pre-sanitized.
   $formats = filter_formats();
   foreach ($formats as $format) {
     $options[$format->format] = check_plain($format->name);
@@ -29,6 +31,15 @@ function appbar_admin(&$form_state) {
     '#required' => TRUE,
     '#default_value' => variable_get('appbar_filter', 1),
     '#options' => $options,
+  );
+   */
+  $form['appbar_css'] = array(
+    '#type' => 'select',
+    '#title' => t('Style'),
+    '#description' => t('Select the style you would like to use for the appbar.'),
+    '#required' => TRUE,
+    '#default_value' => variable_get('appbar_css', 'default'),
+    '#options' => _appbar_add_css(TRUE),
   );
   $form['appbar_hijack'] = array(
     '#type' => 'radios',

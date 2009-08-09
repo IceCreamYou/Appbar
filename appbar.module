@@ -136,6 +136,18 @@ function appbar_appbar_id() {
 }
 
 /**
+ * Implementation of hook_appbar_css().
+ */
+function appbar_appbar_css() {
+  $blue_path = drupal_get_path('module', 'appbar') .'/blue.appbar.css';
+  $dark_path = drupal_get_path('module', 'appbar') .'/dark.appbar.css';
+  return array(
+    $blue_path => t('Blue (@path)', array('@path' => $blue_path)),
+    $dark_path => t('Dark (@path)', array('@path' => $dark_path)),
+  );
+}
+
+/**
  * Implementation of hook_theme().
  */
 function appbar_theme($existing, $type, $theme, $path) {
@@ -236,7 +248,7 @@ function theme_appbar_alerts_list() {
   $alerts = appbar_get_messages();
   $count = count($alerts);
   foreach ($alerts as $key => $alert) {
-    //We add the appbar-id- prefix to the class so that we don't accidentally end up with commonly themed classes like "status."
+    //Add the appbar-id- prefix to the class so that we don't accidentally end up with commonly themed classes like "status."
     $item = '<div class="appbar_alert appbar-id-'. check_plain($alert->identifier);
     //The system property is not stored in the database.
     if ($alert->system == 1) {
@@ -252,13 +264,17 @@ function theme_appbar_alerts_list() {
       $item .= ' appbar-alert-last';
     }
     $item .= '">';
-    if ($alert->system == 1) {
+    /*
+    //Skip the check_markup() because the message should have already been run through t().
+    if ($alert->system != 1) {
       $item .= check_markup($alert->message, variable_get('appbar_filter', 1));
     }
     //Don't run an input filter over a system message; it should be already processed (run through t()).
     else {
       $item .= $alert->message;
     }
+     */
+    $item .= $alert->message;
     $item .= '<span class="appbar_time">'. theme('appbar_time', $alert->alert_time) .'</span>';
     $item .= '</div>';
     $output .= $item;
@@ -470,9 +486,36 @@ function _appbar_prepare() {
     drupal_add_js(array('appbar' => array(
       'delay' => variable_get('appbar_time', 20000),
     )), 'setting');
-    $path = drupal_get_path('module', 'appbar');
-    drupal_add_css($path .'/appbar.css');
-    drupal_add_js($path .'/appbar.js');
+    _appbar_add_css();
+    drupal_add_js(drupal_get_path('module', 'appbar') .'/appbar.js');
+  }
+}
+
+/**
+ * Determines which style to use.
+ *
+ * @param $list
+ *   If TRUE, returns an associative array of filepaths to CSS files.
+ *   If FALSE, adds the appropriate CSS to the page.
+ */
+function _appbar_add_css($list = FALSE) {
+  drupal_add_css(drupal_get_path('module', 'appbar') .'/appbar.css');
+  if (!$list && variable_get('appbar_css', 'default') != 'default' && file_exists(variable_get('appbar_css', 'default'))) {
+    drupal_add_css(variable_get('appbar_css', 'default'));
+  }
+  if ($list) {
+    $css = array('default' => t('Default'));
+    $filedir = file_directory_path() .'/appbar';
+    if (file_exists($filedir)) {
+      $files = scandir($filedir);
+      foreach ($files as $file) {
+        if (drupal_substr($file, -11) == '.appbar.css') {
+          $css[$file] = drupal_ucfirst(drupal_substr($file, drupal_strlen($filedir) + 1, -11)) .' ('. $file .')';
+        }
+      }
+    }
+    $imported = module_invoke_all('appbar_css');
+    return array_merge($css, $imported);
   }
 }
 

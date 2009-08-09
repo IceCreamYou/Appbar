@@ -76,6 +76,7 @@ function appbar_install() {
  */
 function appbar_uninstall() {
   drupal_uninstall_schema('appbar');
+  variable_del('appbar_css');
   variable_del('appbar_min');
   variable_del('appbar_menu');
   variable_get('appbar_time');

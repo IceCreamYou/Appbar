@@ -1,0 +1,25 @@
+/* $Id$ */
+
+#appbar {
+  background-color: #B3D4EF;
+  border-color: #5788AF;
+  color: #1D435F;
+}
+
+#appbar_alerts_list {
+  background-color: #D1E2EF;
+  border-color: #5788AF;
+  color: #1D435F;
+}
+
+/* IE does not support the "inherit" property so we specify this explicitly. */
+#appbar_items,
+#appbar_messages,
+.appbar_alert,
+.appbar-item {
+  border-color: #5788AF;
+}
+
+.appbar-new {
+  background-color: #DFF4FF;
+}
