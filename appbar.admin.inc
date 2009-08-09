@@ -41,6 +41,26 @@ function appbar_admin(&$form_state) {
     '#default_value' => variable_get('appbar_css', 'default'),
     '#options' => _appbar_add_css(TRUE),
   );
+  if (module_exists('views')) {
+    $views = views_get_all_views();
+    $list = array('appbar-default' => t('Default'));
+    foreach ($views as $name => $view) {
+      if ($view->disabled == 0) {
+        $list[$name] = $name;
+      }
+    }
+    unset($views);
+    unset($view);
+    $form['appbar_view'] = array(
+      '#type' => 'select',
+      '#title' => t('View for alert list'),
+      '#description' => t('If you use a View instead of the default list, you will lose the default styling, and you may not be able to visually differentiate new alerts.')
+        .' '. t('Note that Appbar will use the default display of the View, if you choose one.')
+        .' '. t('Also, the View (if you use one) should have one argument that takes multiple User IDs.'),
+      '#default_value' => variable_get('appbar_view', 'appbar-default'),
+      '#options' => $list,
+    );
+  }
   $form['appbar_hijack'] = array(
     '#type' => 'radios',
     '#title' => t('Hijack system messages for alerts'),
@@ -139,9 +159,11 @@ function appbar_admin(&$form_state) {
   $form['appbar_extra']['appbar_admin'] = array(
     '#type' => 'textarea',
     '#title' => t('Send a message to all users'),
-    '#description' => t('Use with care.'),
+    '#description' => t('Use with care. Note that this will not show up as a new message.'),
     '#rows' => 5,
   );
+  $form['#validate'][] = 'appbar_admin_validate';
+  $form['#submit'][] = 'appbar_admin_submit';
   return system_settings_form($form);
 }
 
@@ -159,13 +181,8 @@ function appbar_admin_validate($form, &$form_state) {
  * Submit function for the admin settings form.
  */
 function appbar_admin_submit($form, &$form_state) {
-  /** Not sure if this is necessary
-  variable_set('appbar_user_vis', $form_state['values']['user_vis_settings']['appbar_user_vis']);
-  variable_set('appbar_page_vis', $form_state['values']['page_vis_settings']['appbar_page_vis']);
-  variable_set('appbar_vis_list', $form_state['values']['page_vis_settings']['appbar_vis_list']);
-   */
   $message = trim(filter_xss_admin($form_state['values']['appbar_admin']));
-  if (!$message) {
+  if ($message) {
     appbar_set_message($message, 'announcement', 'all');
   }
 }

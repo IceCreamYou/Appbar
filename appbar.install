@@ -45,7 +45,7 @@ function appbar_schema() {
         'length' => 1024,
         'not null' => TRUE,
         'default' => '',
-        'description' => 'The text of the message.',
+        'description' => 'The text of the alert message.',
       ),
       'identifier' => array(
         'type' => 'varchar',
@@ -79,7 +79,8 @@ function appbar_uninstall() {
   variable_del('appbar_css');
   variable_del('appbar_min');
   variable_del('appbar_menu');
-  variable_get('appbar_time');
+  variable_del('appbar_time');
+  variable_del('appbar_view');
   variable_del('appbar_types');
   variable_del('appbar_filter');
   variable_del('appbar_hijack');

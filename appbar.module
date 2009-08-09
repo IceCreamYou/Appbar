@@ -244,6 +244,9 @@ function theme_appbar_alerts() {
  * Themes the list of Appbar alerts.
  */
 function theme_appbar_alerts_list() {
+  if (module_exists('views') && variable_get('appbar_view', 'appbar-default') != 'appbar-default') {
+    return views_embed_view(variable_get('appbar_view', 'appbar-default'), 'default', $GLOBALS['user']->uid .',0');
+  }
   $output = '';
   $alerts = appbar_get_messages();
   $count = count($alerts);
@@ -377,14 +380,14 @@ function appbar_set_message($message, $identifier = 'misc', $uid = NULL) {
     return;
   }
   //Don't record actions for the anonymous user.
-  if ($uid == 0) {
+  if ($uid === 0) {
     return;
   }
   if ($uid == 'all') {
     $uid = 0;
   }
   if (in_array($identifier, variable_get('appbar_types', array()))) {
-    $object = array('alert_time' => time(), 'identifier' => $identifier, 'message' => $message, 'status' => 1, 'uid' => $uid);
+    $object = array('alert_time' => time(), 'identifier' => $identifier, 'message' => $message, 'status' => 0, 'uid' => $uid);
     drupal_write_record('appbar', $object);
   }
 }
@@ -606,4 +609,11 @@ function appbar_set_message_action_submit($form, &$form_state) {
     'message' => filter_xss($form_state['values']['message']),
     'uid' => $form_state['values']['destination'],
   );
+}
+
+/**
+ * Implementation of hook_views_api().
+ */
+function appbar_views_api() {
+  return array('api' => 2);
 }
