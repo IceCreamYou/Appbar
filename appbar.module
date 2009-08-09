@@ -3,11 +3,8 @@
 
 /**
  * @file
- *   Adds an application toolbar to the bottom of the page for site users, like
- *   Facebook. The bar keeps track of alerts from the site and can hold links.
- * @todo
- *   Allow a way to assign graphics to each of the links in the menu.
- *   Add Facebook Application Menu-esque sub-menu-item suckerfish-style drop-up-on-click menu support.
+ *   Adds a toolbar to the bottom of the page for site users, like Facebook.
+ *   The bar keeps track of alerts from the site and can hold links.
  */
 
 //============================
@@ -251,7 +248,7 @@ function theme_appbar_alerts_list() {
     if ($key == 0) {
       $item .= ' appbar-alert-first';
     }
-    if ((int) $key === $count) {
+    if ((int) $key === $count - 1) {
       $item .= ' appbar-alert-last';
     }
     $item .= '">';

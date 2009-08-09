@@ -47,7 +47,7 @@
   border: 1px #B5B5B5 solid;
   bottom: 26px;
   display: none;
-  /* margin: 0 15px 0 0; */
+  margin-bottom: -1px; /* Hide the bottom border. */
   max-height: 450px;
   min-height: 249px;
   overflow-x: hidden;
@@ -70,6 +70,13 @@
   padding: 0.5em;
 }
 
+.appbar-alert-first {
+}
+
+.appbar-alert-last {
+  border-bottom: 0 none;
+}
+
 .appbar-new {
   background-color: #FFFFCF;
 }
@@ -87,5 +94,13 @@
 }
 
 .appbar-item-last {
-  border-right: none;
+  border-right: 0 none;
+}
+
+/** Style the alerts section differently if there are new alerts. **/
+.appbar-has-new {
+}
+
+/** Style the page differently if the Appbar is being shown. **/
+.with-appbar {
 }
