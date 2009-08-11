@@ -11,5 +11,5 @@ Drupal.behaviors.appbar = function (context) {
 }
 function appbar_refresh() {
   $('#appbar_count').load('/appbar/refresh/count');
-  $('#appbar_messages').toggleClass('appbar-has-new', parseInt($('#appbar_count').html()) > 0);
+  $('#appbar_messages').toggleClass('appbar-has-new', parseInt($('#appbar_count').html()) > 0); /* Doesn't work. Always shows class. */
 }

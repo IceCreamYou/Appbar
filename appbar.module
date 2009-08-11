@@ -203,7 +203,9 @@ function theme_appbar_bar($check_vis = TRUE) {
   }
   if (_appbar_show() || (!$check_vis && _appbar_show(TRUE))) {
     $regions = '';
-    foreach (module_invoke_all('appbar_region') as $name => $region) {
+    $collected = module_invoke_all('appbar_region');
+    drupal_alter('appbar_regions', $collected);
+    foreach ($collected as $name => $region) {
       $regions .= '<div id="'. $name .'">'. $region .'</div>';
     }
     if ($regions) {
@@ -394,6 +396,7 @@ function appbar_set_message($message, $identifier = 'misc', $uid = NULL) {
   if (in_array($identifier, variable_get('appbar_types', array()))) {
     $object = array('alert_time' => time(), 'identifier' => $identifier, 'message' => $message, 'status' => 1, 'uid' => $uid);
     drupal_write_record('appbar', $object);
+    drupal_alter('appbar_message', $object);
   }
 }
 
@@ -517,7 +520,7 @@ function _appbar_add_css($list = FALSE) {
     if (file_exists($filedir)) {
       $files = scandir($filedir);
       foreach ($files as $file) {
-        if (drupal_substr($file, -11) == '.appbar.css') {
+        if (drupal_substr($file, -4) == '.css') {
           $css[$file] = drupal_ucfirst(drupal_substr($file, drupal_strlen($filedir) + 1, -11)) .' ('. $file .')';
         }
       }
