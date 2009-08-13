@@ -120,6 +120,7 @@ function appbar_appbar_region() {
   return array(
     'appbar_menu' => theme('appbar_items'),
     'appbar_messages' => theme('appbar_alerts'),
+    'appbar_im' => theme('appbar_im'),
   );
 }
 
@@ -167,6 +168,9 @@ function appbar_theme($existing, $type, $theme, $path) {
       'arguments' => array(
         'check_vis' => TRUE,
       ),
+    ),
+    'appbar_im' => array(
+      'arguments' => array(),
     ),
     'appbar_items' => array(
       'arguments' => array(),
@@ -313,6 +317,20 @@ function theme_appbar_time($time) {
   }
   else {
     return format_date($time, 'small');
+  }
+}
+
+/**
+ * Implements IM integration.
+ */
+function theme_appbar_im() {
+  if (module_exists('im')) {
+    $output = '<span id="appbar_im_text">'. t('IM') .'</span>';
+    $output .= '<span id="appbar_im_console">';
+    $friendlist_array = im_friendlist_array();
+    $output .= im_make_block_friendlist($friendlist_array);
+    $output .= im_make_block_console();
+    return $output . '</span>';
   }
 }
 
@@ -499,6 +517,12 @@ function _appbar_prepare() {
     )), 'setting');
     _appbar_add_css();
     drupal_add_js(drupal_get_path('module', 'appbar') .'/appbar.js');
+    //The IM module needs to add its JS too if we're using it.
+    if (module_exists('im')) {
+      $friendlist_array = im_friendlist_array();
+      $output .= im_make_block_friendlist($friendlist_array);
+      $output .= im_make_block_console();
+    }
   }
 }
 

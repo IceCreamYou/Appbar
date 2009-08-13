@@ -84,7 +84,8 @@ function appbar_defaults_exit() {
   if (arg(0) == 'user' && is_numeric(arg(1)) && !arg(2)) {
     //Don't count viewing one's own profile.
     if ($user->uid != arg(1)) {
-      appbar_set_message(t('%name visited your profile.', array('%name' => $user->name)), 'user-visit', arg(1));
+      //Broken. Records too often or something like that.
+      //appbar_set_message(t('%name visited your profile.', array('%name' => $user->name)), 'user-visit', arg(1));
     }
   }
 }
@@ -107,6 +108,6 @@ function appbar_defaults_appbar_id() {
     'node-update-1' => t('Node updating (alerts User 1)'),
     'user-delete-1' => t('User deletion (alerts User 1)'),
     'user-insert-1' => t('User insertion (alerts User 1)'),
-    'user-visit' => t('User profile viewed (alerts profile owner)'),
+    //'user-visit' => t('User profile viewed (alerts profile owner)'),
   );
 }

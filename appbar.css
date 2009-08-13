@@ -30,19 +30,22 @@
   right: 0;
 }
 
-#appbar_messages {
+#appbar_messages,
+#appbar_im {
   border-left: 1px #B5B5B5 solid;
   float: right;
   height: 25px;
 }
 
-#appbar_alerts {
+#appbar_alerts,
+#appbar_im {
   cursor: pointer;
   padding-left: 0.5em;
   padding-right: 0.5em;
 }
 
-#appbar_alerts_list {
+#appbar_alerts_list,
+#appbar_im_console {
   background-color: #FFFFFF;
   border: 1px #B5B5B5 solid;
   bottom: 26px;
