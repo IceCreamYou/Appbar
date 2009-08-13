@@ -37,15 +37,13 @@
   height: 25px;
 }
 
-#appbar_alerts,
-#appbar_im {
+#appbar_alerts {
   cursor: pointer;
   padding-left: 0.5em;
   padding-right: 0.5em;
 }
 
-#appbar_alerts_list,
-#appbar_im_console {
+#appbar_alerts_list {
   background-color: #FFFFFF;
   border: 1px #B5B5B5 solid;
   bottom: 26px;
