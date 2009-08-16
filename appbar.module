@@ -393,7 +393,7 @@ function appbar_set_message($message, $identifier = 'misc', $uid = NULL) {
   if ($uid == 'all') {
     $uid = 0;
   }
-  if (in_array($identifier, variable_get('appbar_types', array()))) {
+  if (in_array($identifier, variable_get('appbar_types', array()), TRUE)) {
     $object = array('alert_time' => time(), 'identifier' => $identifier, 'message' => $message, 'status' => 1, 'uid' => $uid);
     drupal_write_record('appbar', $object);
     drupal_alter('appbar_message', $object);
