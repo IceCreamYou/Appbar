@@ -74,7 +74,7 @@ function appbar_admin(&$form_state) {
       'yes-no' => t('Use system messages for alerts, but also show them above the content area'),
     ),
   );
-  $form['appbar_max'] = array(
+  $form['appbar_min'] = array(
     '#type' => 'select',
     '#title' => t('Minimum number of alerts to show'),
     '#description' => t('All new alerts will always be shown, but if the number of new alerts is less than the number you specify here,'.

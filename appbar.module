@@ -218,19 +218,28 @@ function theme_appbar_bar($check_vis = TRUE) {
  * Gets the list of links to show on the appbar.
  */
 function theme_appbar_items() {
-  $items = array_values(menu_navigation_links(variable_get('appbar_menu', 'secondary-links')));
+  $items = menu_navigation_links(variable_get('appbar_menu', 'secondary-links'));
   $count = count($items);
   $links = '<div id="appbar_items">';
-  foreach ($items as $key => $item) {
+  $i = 0;
+  //This should probably just use theme_links().
+  foreach ($items as $classes => $item) {
     $links .= '<span class="appbar-item';
-    if ($key == 0) {
+    if ($i == 0) {
       $links .= ' appbar-item-first';
     }
     //This is not an else if because if there is only one item then it is both first and last.
-    if ($key == $count - 1) {
+    if ($i == $count - 1) {
       $links .= ' appbar-item-last';
     }
-    $links .= '">'. l($item['title'], $item['href']) .'</span>';
+    //$item has all the right criteria to be passed in as the third parameter to l().
+    $link = l($item['title'], $item['href'], $item);
+    if (!$link['href']) {
+      $link = check_plain($item['title']);
+    }
+    //$classes is always menu-[MLID] and sometimes also active-trail, but it could theoretically hold lots of things.
+    $links .= ' '. $classes .'">'. $link .'</span>';
+    $i++;
   }
   return $links .'</div>';
 }
