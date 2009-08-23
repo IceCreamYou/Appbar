@@ -67,10 +67,13 @@ function appbar_user($op, &$edit, &$account, $category = NULL) {
   }
   else if ($op == 'form' && $category == 'account' && variable_get('appbar_user_vis', 0) != 0) {
     $data = unserialize($account->data);
+    if (!isset($data['appbar_user_vis'])) {
+      $data['appbar_user_vis'] = 1;
+    }
     $form['appbar_user_vis'] = array(
       '#type' => 'checkbox',
       '#title' => t('Show Application Toolbar'),
-      '#default_value' => isset($data['appbar_user_vis']) ? $data['appbar_user_vis'] : 1,
+      '#default_value' => $data['appbar_user_vis'],
     );
     return $form;
   }
