@@ -81,6 +81,7 @@ function appbar_uninstall() {
   variable_del('appbar_menu');
   variable_del('appbar_time');
   variable_del('appbar_view');
+  variable_del('appbar_admin');
   variable_del('appbar_types');
   variable_del('appbar_filter');
   variable_del('appbar_hijack');

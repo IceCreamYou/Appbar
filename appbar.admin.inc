@@ -90,6 +90,12 @@ function appbar_admin(&$form_state) {
     '#required' => TRUE,
     '#default_value' => variable_get('appbar_time', 20000),
   );
+  $form['appbar_admin'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Record alerts from User 1'),
+    '#description' => t('This setting is necessary because the option to hide alerts for roles is done via permissions.'),
+    '#default_value' => variable_get('appbar_admin', 1),
+  );
   $types = module_invoke_all('appbar_id');
   $form['appbar_types'] = array(
     '#type' => 'checkboxes',
