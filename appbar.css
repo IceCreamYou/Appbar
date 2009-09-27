@@ -66,6 +66,10 @@
   height: 25px;
 }
 
+#appbar .views-hide {
+  display: none;
+}
+
 .appbar_alert {
   border-bottom: 1px #B5B5B5 solid;
   padding: 0.5em;

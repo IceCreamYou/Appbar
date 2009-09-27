@@ -107,7 +107,7 @@ function appbar_views_data() {
     'title' => t('Alert message'),
     'help' => t('The text of the alert message.'),
     'field' => array(
-      'handler' => 'views_handler_field',
+      'handler' => 'appbar_views_handler_field_message',
       'click sortable' => TRUE,
     ),
     'filter' => array(
@@ -162,6 +162,9 @@ function appbar_views_handlers() {
       'path' => drupal_get_path('module', 'appbar'),
     ),
     'handlers' => array(
+      'appbar_views_handler_field_message' => array(
+        'parent' => 'views_handler_field',
+      ),
       'appbar_views_handler_field_read' => array(
         'parent' => 'views_handler_field',
       ),
