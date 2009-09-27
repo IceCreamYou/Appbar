@@ -119,20 +119,6 @@ function appbar_footer($main = 0) {
 }
 
 /**
- * Implementation of hook_action_info().
- */
-function appbar_action_info() {
-  return array(
-    'appbar_set_message_action' => array(
-      'description' => t('Set an alert in the Application Toolbar.'),
-      'type' => 'appbar',
-      'configurable' => TRUE,
-      'hooks' => array('any' => TRUE),
-    ),
-  );
-}
-
-/**
  * Implementation of hook_appbar_region().
  */
 function appbar_appbar_region() {
@@ -607,6 +593,65 @@ function _appbar_page($page = 'count') {
 //=============
 //INTEGRATIONS.
 //=============
+
+/**
+ * Implementation of hook_rules_action_info().
+ */
+function appbar_rules_action_info() {
+  return array(
+    'appbar_action_set_message' => array(
+      'label' => t('Set an alert in the Application Toolbar'),
+      'module' => 'Application Toolbar',
+      'eval input' => array('message'),
+    ),
+  );
+}
+
+/**
+ * Sets an alert from Rules.
+ */
+function appbar_action_set_message($settings) {
+  if ($settings['account'] == 'user') {
+    $settings['account'] = $GLOBALS['user']->uid;
+  }
+  appbar_set_message($settings['message'], 'misc', $settings['account']);
+}
+
+/**
+ * Configuration form for the Rules action to set an alert.
+ */
+function appbar_action_set_message_form($settings, &$form) {
+  $settings += array('message' => '', 'account' => 'user');
+  $form['settings']['message'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Message'),
+    '#required' => TRUE,
+    '#rows' => 5,
+    '#default_value' => $settings['message'],
+  );
+  $form['settings']['account'] = array(
+    '#type' => 'select',
+    '#title' => t('Show message to'),
+    '#description' => t('The alert will be registered for the person or people specified above.'),
+    '#required' => TRUE,
+    '#default_value' => $settings['account'],
+    '#options' => array('all' => t('All users'), 'user' => t('The user who performed the action'), 1 => t('User 1')),
+  );
+}
+
+/**
+ * Implementation of hook_action_info().
+ */
+function appbar_action_info() {
+  return array(
+    'appbar_set_message_action' => array(
+      'description' => t('Set an alert in the Application Toolbar.'),
+      'type' => 'appbar',
+      'configurable' => TRUE,
+      'hooks' => array('any' => TRUE),
+    ),
+  );
+}
 
 /**
  * Sets a message via Triggers/Actions.
