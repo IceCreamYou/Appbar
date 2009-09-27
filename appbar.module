@@ -38,8 +38,8 @@ function appbar_menu() {
     'access arguments' => array('access administration pages'),
     'weight' => -1,
   );
-  $items['admin/settings/appbar/alert_types'] = array(
-    'title' => 'Alert types',
+  $items['admin/settings/appbar/display'] = array(
+    'title' => 'Display elements',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('appbar_admin_types'),
     'access arguments' => array('access administration pages'),
@@ -223,9 +223,12 @@ function theme_appbar_bar($check_vis = TRUE) {
   if (_appbar_show() || (!$check_vis && _appbar_show(TRUE))) {
     $regions = '';
     $collected = module_invoke_all('appbar_region');
+    $ardefault = variable_get('appbar_regions', array_keys($collected));
     drupal_alter('appbar_regions', $collected);
     foreach ($collected as $name => $region) {
-      $regions .= '<div id="'. $name .'">'. $region .'</div>';
+      if ($ardefault[$name]) {
+        $regions .= '<div id="'. $name .'">'. $region .'</div>';
+      }
     }
     if ($regions) {
       return '<div id="appbar_container"><div id="appbar_sub"><div id="appbar">'. $regions .'</div></div></div>';

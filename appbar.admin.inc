@@ -200,5 +200,13 @@ function appbar_admin_types(&$form_state) {
     '#default_value' => variable_get('appbar_types', array_keys($types)),
     '#options' => $types,
   );
+  $regions = drupal_map_assoc(array_keys(module_invoke_all('appbar_region')));
+  $form['appbar_regions'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Appbar regions'),
+    '#description' => t('Enable or disable regions on the Appbar.'),
+    '#default_value' => variable_get('appbar_regions', $regions),
+    '#options' => $regions,
+  );
   return system_settings_form($form);
 }
