@@ -82,7 +82,8 @@
   border-bottom: 0 none;
 }
 
-.appbar-new {
+.appbar-new,
+.appbar-has-new {
   background-color: #FFFFCF;
 }
 
@@ -100,10 +101,6 @@
 
 .appbar-item-last {
   border-right: 0 none;
-}
-
-/** Style the alerts section differently if there are new alerts. **/
-.appbar-has-new {
 }
 
 /** Style the page differently if the Appbar is being shown. **/

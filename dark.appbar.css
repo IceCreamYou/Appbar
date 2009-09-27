@@ -20,6 +20,7 @@
   border-color: #2F2F2F;
 }
 
-.appbar-new {
+.appbar-new,
+.appbar-has-new {
   background-color: #4F4F4F;
 }
