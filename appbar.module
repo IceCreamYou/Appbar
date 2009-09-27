@@ -32,6 +32,22 @@ function appbar_menu() {
     'description' => 'Allows administrators to adjust certain display settings for Appbar.',
     'file' => 'appbar.admin.inc',
   );
+  $items['admin/settings/appbar/general'] = array(
+    'title' => 'General',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'access arguments' => array('access administration pages'),
+    'weight' => -1,
+  );
+  $items['admin/settings/appbar/alert_types'] = array(
+    'title' => 'Alert types',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('appbar_admin_types'),
+    'access arguments' => array('access administration pages'),
+    'description' => 'Allows administrators to choose which alert types to accept.',
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'appbar.admin.inc',
+    'weight' => 1,
+  );
   $items['appbar/refresh/list'] = array(
     'title' => 'Refresh Appbar',
     'page callback' => '_appbar_page',

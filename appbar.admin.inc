@@ -96,15 +96,7 @@ function appbar_admin(&$form_state) {
     '#description' => t('This setting is necessary because the option to hide alerts for roles is done via permissions.'),
     '#default_value' => variable_get('appbar_admin', 1),
   );
-  $types = module_invoke_all('appbar_id');
-  $form['appbar_types'] = array(
-    '#type' => 'checkboxes',
-    '#title' => t('Types of alerts to record'),
-    '#description' => t('Only alerts categorized in one of the categories enabled below will appear in the alert dialog.'),
-    '#default_value' => variable_get('appbar_types', array_keys($types)),
-    '#options' => $types,
-  );
-  
+
   /**
    * This section is largely copied from block.admin.inc.
    */
@@ -194,4 +186,19 @@ function appbar_admin_submit($form, &$form_state) {
   if ($form_state['values']['appbar_css'] != variable_get('appbar_css', 'default')) {
     drupal_clear_css_cache();
   }
+}
+
+/**
+ * Allows admin to choose which alert types to accept.
+ */
+function appbar_admin_types(&$form_state) {
+  $types = module_invoke_all('appbar_id');
+  $form['appbar_types'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Types of alerts to record'),
+    '#description' => t('Only alerts categorized in one of the categories enabled below will appear in the alert dialog.'),
+    '#default_value' => variable_get('appbar_types', array_keys($types)),
+    '#options' => $types,
+  );
+  return system_settings_form($form);
 }
