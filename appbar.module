@@ -209,10 +209,10 @@ function theme_appbar_bar($check_vis = TRUE) {
   if (_appbar_show() || (!$check_vis && _appbar_show(TRUE))) {
     $regions = '';
     $collected = module_invoke_all('appbar_region');
-    $ardefault = variable_get('appbar_regions', array_keys($collected));
+    $ardefault = variable_get('appbar_regions', drupal_map_assoc(array_keys($collected)));
     drupal_alter('appbar_regions', $collected);
     foreach ($collected as $name => $region) {
-      if ($ardefault[$name]) {
+      if ($ardefault[$name] && $region) {
         $regions .= '<div id="'. $name .'">'. $region .'</div>';
       }
     }
@@ -228,6 +228,9 @@ function theme_appbar_bar($check_vis = TRUE) {
 function theme_appbar_items() {
   $items = menu_navigation_links(variable_get('appbar_menu', 'secondary-links'));
   $count = count($items);
+  if (!$count) {
+    return '';
+  }
   $links = '<div id="appbar_items">';
   $i = 0;
   //This should probably just use theme_links().
@@ -291,16 +294,6 @@ function theme_appbar_alerts_list() {
       $item .= ' appbar-alert-last';
     }
     $item .= '">';
-    /*
-    //Skip the check_markup() because the message should have already been run through t().
-    if ($alert->system != 1) {
-      $item .= check_markup($alert->message, variable_get('appbar_filter', 1));
-    }
-    //Don't run an input filter over a system message; it should be already processed (run through t()).
-    else {
-      $item .= $alert->message;
-    }
-     */
     $item .= $alert->message;
     $item .= '<span class="appbar_time">'. theme('appbar_time', $alert->alert_time) .'</span>';
     $item .= '</div>';
@@ -410,7 +403,7 @@ function appbar_set_message($message, $identifier = 'misc', $uid = NULL) {
   if ($uid == 'all') {
     $uid = 0;
   }
-  if (in_array($identifier, variable_get('appbar_types', array()), TRUE)) {
+  if (in_array($identifier, variable_get('appbar_types', array('announcement', 'misc')), TRUE)) {
     $object = array('alert_time' => time(), 'identifier' => $identifier, 'message' => $message, 'status' => 1, 'uid' => $uid);
     drupal_alter('appbar_message', $object);
     drupal_write_record('appbar', $object);

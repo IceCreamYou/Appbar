@@ -18,21 +18,6 @@ function appbar_admin(&$form_state) {
     '#default_value' => variable_get('appbar_menu', 'secondary-links'),
     '#options' => menu_get_menus(),
   );
-  /*
-  //This section has been commented out because messages are run through t() and therefore pre-sanitized.
-  $formats = filter_formats();
-  foreach ($formats as $format) {
-    $options[$format->format] = check_plain($format->name);
-  }
-  $form['appbar_filter'] = array(
-    '#type' => 'select',
-    '#title' => t('Input filter for alerts'),
-    '#description' => t('This input filter will run over the text in alerts. Does not apply to hijacked system messages.'),
-    '#required' => TRUE,
-    '#default_value' => variable_get('appbar_filter', 1),
-    '#options' => $options,
-  );
-   */
   $form['appbar_css'] = array(
     '#type' => 'select',
     '#title' => t('Style'),
@@ -93,7 +78,7 @@ function appbar_admin(&$form_state) {
   $form['appbar_admin'] = array(
     '#type' => 'checkbox',
     '#title' => t('Record alerts from User 1'),
-    '#description' => t('This setting is necessary because the option to hide alerts for roles is done via permissions.'),
+    '#description' => t('Allows you to suppress all alerts from the super administrator.'),
     '#default_value' => variable_get('appbar_admin', 1),
   );
 
@@ -113,7 +98,7 @@ function appbar_admin(&$form_state) {
       t('Show the Application Toolbar by default, but let individual users hide it.'),
       t('Hide the Application Toolbar by default but let individual users show it.')
     ),
-    '#description' => t('Allow individual users to customize the visibility of this block in their account settings.'),
+    '#description' => t('Allow individual users to customize the visibility of the appbar in their account settings.'),
     '#default_value' => variable_get('appbar_user_vis', 0),
   );
   $form['page_vis_settings'] = array(
@@ -197,7 +182,7 @@ function appbar_admin_types(&$form_state) {
     '#type' => 'checkboxes',
     '#title' => t('Types of alerts to record'),
     '#description' => t('Only alerts categorized in one of the categories enabled below will appear in the alert dialog.'),
-    '#default_value' => variable_get('appbar_types', array_keys($types)),
+    '#default_value' => variable_get('appbar_types', array('announcement', 'misc')),
     '#options' => $types,
   );
   $regions = drupal_map_assoc(array_keys(module_invoke_all('appbar_region')));
