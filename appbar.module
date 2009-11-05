@@ -213,10 +213,28 @@ function theme_appbar_bar($check_vis = TRUE) {
     $collected = module_invoke_all('appbar_region');
     $ardefault = variable_get('appbar_regions', drupal_map_assoc(array_keys($collected)));
     drupal_alter('appbar_regions', $collected);
+    $existing = array();
     foreach ($collected as $name => $region) {
       if ($ardefault[$name] && $region) {
-        $regions .= '<div id="'. $name .'">'. $region .'</div>';
+        $existing[$name] = $region;
       }
+    }
+    $i = 1;
+    $count = count($existing);
+    if (!$count) {
+      return '';
+    }
+    foreach ($existing as $name => $region) {
+      $regions .= '<div id="'. $name .'" class="appbar-region';
+      if ($i == 1) {
+        $regions .= ' appbar-region-first';
+      }
+      //This is not an elseif because if there is only one item then it is both first and last.
+      if ($i == $count) {
+        $regions .= ' appbar-region-last';
+      }
+      $regions .= '">'. $region .'</div>';
+      $i++;
     }
     if ($regions) {
       return '<div id="appbar_container"><div id="appbar_sub"><div id="appbar">'. $regions .'</div></div></div>';
@@ -234,15 +252,15 @@ function theme_appbar_items() {
     return '';
   }
   $links = '<div id="appbar_items">';
-  $i = 0;
+  $i = 1;
   //This should probably just use theme_links().
   foreach ($items as $classes => $item) {
     $links .= '<span class="appbar-item';
-    if ($i == 0) {
+    if ($i == 1) {
       $links .= ' appbar-item-first';
     }
     //This is not an elseif because if there is only one item then it is both first and last.
-    if ($i == $count - 1) {
+    if ($i == $count) {
       $links .= ' appbar-item-last';
     }
     //$item has all the right criteria to be passed in as the third parameter to l().
