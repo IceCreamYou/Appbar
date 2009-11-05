@@ -81,7 +81,7 @@ function appbar_user($op, &$edit, &$account, $category = NULL) {
   if ($op == 'delete') {
     db_query("DELETE FROM {appbar} WHERE uid = %d", $account->uid);
   }
-  else if ($op == 'form' && $category == 'account' && variable_get('appbar_user_vis', 0) != 0) {
+  elseif ($op == 'form' && $category == 'account' && variable_get('appbar_user_vis', 0) != 0) {
     $data = unserialize($account->data);
     if (!isset($data['appbar_user_vis'])) {
       $data['appbar_user_vis'] = 1;
@@ -151,9 +151,11 @@ function appbar_appbar_id() {
 function appbar_appbar_css() {
   $blue_path = drupal_get_path('module', 'appbar') .'/blue.appbar.css';
   $dark_path = drupal_get_path('module', 'appbar') .'/dark.appbar.css';
+  $wunderbar_path = drupal_get_path('module', 'appbar') .'/wunderbar.appbar.css';
   return array(
     $blue_path => t('Blue (@path)', array('@path' => $blue_path)),
     $dark_path => t('Dark (@path)', array('@path' => $dark_path)),
+    $wunderbar_path => t('Wunderbar (@path)', array('@path' => $wunderbar_path)),
   );
 }
 
@@ -239,7 +241,7 @@ function theme_appbar_items() {
     if ($i == 0) {
       $links .= ' appbar-item-first';
     }
-    //This is not an else if because if there is only one item then it is both first and last.
+    //This is not an elseif because if there is only one item then it is both first and last.
     if ($i == $count - 1) {
       $links .= ' appbar-item-last';
     }
@@ -318,7 +320,7 @@ function theme_appbar_time($time) {
   if (time() - $time < 60) {
     return t('a moment ago');
   }
-  else if (time() - $time < 60 * 60 * 24 * 3) {
+  elseif (time() - $time < 60 * 60 * 24 * 3) {
     return t('!time ago', array('!time' => format_interval(time() - $time, 1)));
   }
   else {
@@ -477,7 +479,7 @@ function _appbar_vis() {
     if (variable_get('appbar_page_vis', 0) == 1 && $page_match) {
       return TRUE;
     }
-    else if (variable_get('appbar_page_vis', 0) == 0 && !$page_match) {
+    elseif (variable_get('appbar_page_vis', 0) == 0 && !$page_match) {
       return TRUE;
     }
     return FALSE;
