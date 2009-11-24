@@ -142,7 +142,7 @@ function appbar_admin(&$form_state) {
   $form['appbar_extra']['appbar_admin'] = array(
     '#type' => 'textarea',
     '#title' => t('Send a message to all users'),
-    '#description' => t('Use with care. Note that this will not show up as a new message.'),
+    '#description' => t('Use with caution!'),
     '#rows' => 5,
   );
   $form['#validate'][] = 'appbar_admin_validate';

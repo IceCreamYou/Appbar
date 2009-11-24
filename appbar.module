@@ -420,10 +420,21 @@ function appbar_set_message($message, $identifier = 'misc', $uid = NULL) {
   if ($uid === 0) {
     return;
   }
-  if ($uid == 'all') {
-    $uid = 0;
-  }
   if (in_array($identifier, variable_get('appbar_types', array('announcement', 'misc')), TRUE)) {
+    if ($uid == 'all') {
+      $operations = array();
+      $result = db_query("SELECT uid FROM {users} WHERE uid <> 0");
+      while ($account = db_fetch_object($result)) {
+        $operations[] = array('_appbar_set_message', array($message, $identifier, $account->uid));
+      }
+      batch_set(array(
+        'title' => t('Processing Appbar alert to everyone'),
+        'operations' => $operations,
+        'finished' => '_appbar_process_finished',
+        'file' => drupal_get_path('module', 'appbar') .'/appbar.module',
+      ));
+      return;
+    }
     $object = array('alert_time' => time(), 'identifier' => $identifier, 'message' => $message, 'status' => 1, 'uid' => $uid);
     drupal_alter('appbar_message', $object);
     drupal_write_record('appbar', $object);
@@ -433,6 +444,28 @@ function appbar_set_message($message, $identifier = 'misc', $uid = NULL) {
 //=================
 //HELPER FUNCTIONS.
 //=================
+
+/**
+ * Creates alerts for messages to everyone via the Batch API.
+ */
+function _appbar_set_message($message, $identifier, $uid, &$context) {
+  appbar_set_message($message, $identifier, $uid);
+  $context['results']['num']++;
+}
+
+/**
+ * Alerts the user that processing the message to everyone is complete.
+ */
+function _appbar_process_finished($success, $results, $operations) {
+  $message = t('Finished processing Appbar alert to everyone with an error.');
+  if ($success) {
+    if (!$results['num']) {
+      $results['num'] = 0;
+    }
+    $message = t('Finished processing Appbar alert to everyone (@num users).', array('@num' => $results['num']));
+  }
+  drupal_set_message($message);
+}
 
 /**
  * Re-formats messages from the format returned by drupal_get_messages() to the
@@ -550,18 +583,30 @@ function _appbar_add_css($list = FALSE) {
   }
   if ($list) {
     $css = array('default' => t('Default'));
-    $filedir = file_directory_path() .'/appbar';
-    if (file_exists($filedir)) {
-      $files = scandir($filedir);
-      foreach ($files as $file) {
-        if (drupal_substr($file, -4) == '.css') {
-          $css[$file] = drupal_ucfirst(drupal_substr($file, drupal_strlen($filedir) + 1, -11)) .' ('. $file .')';
-        }
+    $filedir = _appbar_add_style_by_dir(file_directory_path() .'/appbar');
+    $appbardir = _appbar_add_style_by_dir('sites/all/appbar');
+    $imported = module_invoke_all('appbar_css');
+    return array_merge($css, $filedir, $appbardir, $imported);
+  }
+}
+
+/**
+ * Finds Appbar styles by directory.
+ *
+ * @param $filedir
+ *   The directory in which to search for styles.
+ */
+function _appbar_add_style_by_dir($filedir) {
+  if (file_exists($filedir)) {
+    $files = scandir($filedir);
+    foreach ($files as $file) {
+      if (drupal_substr($file, -4) == '.css') {
+        $name = drupal_ucfirst(drupal_substr($file, 0, -11));
+        return array("$filedir/$file" => "$name ($file)");
       }
     }
-    $imported = module_invoke_all('appbar_css');
-    return array_merge($css, $imported);
   }
+  return array();
 }
 
 /**
