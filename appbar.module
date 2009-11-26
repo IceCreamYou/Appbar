@@ -390,7 +390,7 @@ function appbar_get_messages($get_new_count = FALSE) {
     $alerts[] = $row;
   }
   
-  db_query("UPDATE {appbar} SET status = 0 WHERE status = 1 AND uid = %d ORDER BY tid ASC", $GLOBALS['user']->uid);
+  db_query("UPDATE {appbar} SET status = 0 WHERE status = 1 AND uid = %d", $GLOBALS['user']->uid);
   return $alerts;
 }
 
