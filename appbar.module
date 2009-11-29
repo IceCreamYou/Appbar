@@ -660,7 +660,7 @@ function appbar_rules_action_info() {
     'appbar_action_set_message' => array(
       'label' => t('Set an alert in the Application Toolbar'),
       'module' => 'Application Toolbar',
-      'eval input' => array('message'),
+      'eval input' => array('message', 'account'),
     ),
   );
 }
@@ -688,12 +688,12 @@ function appbar_action_set_message_form($settings, &$form) {
     '#default_value' => $settings['message'],
   );
   $form['settings']['account'] = array(
-    '#type' => 'select',
-    '#title' => t('Show message to'),
-    '#description' => t('The alert will be registered for the person or people specified above.'),
+    '#type' => 'textfield',
+    '#title' => t('Show message to (User ID)'),
+    '#description' => t('The alert will be registered for the person specified above. '.
+      'Type "all" (without the quotes) for the message to go to all users, or "user" (without the quotes) for the message to go to the current user.'),
     '#required' => TRUE,
     '#default_value' => $settings['account'],
-    '#options' => array('all' => t('All users'), 'user' => t('The user who performed the action'), 1 => t('User 1')),
   );
 }
 
