@@ -42,7 +42,7 @@ function appbar_schema() {
       ),
       'message' => array(
         'type' => 'text',
-        'length' => 1024,
+        //'length' => 1024, //Not PostgreSQL-compatible
         'not null' => TRUE,
         'default' => '',
         'description' => 'The text of the alert message.',
