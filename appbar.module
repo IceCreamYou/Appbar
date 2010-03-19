@@ -766,7 +766,7 @@ function appbar_views_api() {
 /**
  * Implementation of hook_activity_messages_alter().
  */
-function appbar_activity_messages_alter($messages, $type) {
+function appbar_activity_messages_alter($messages, $object_name, $types) {
   foreach ($messages as $uid => $message) {
     $id = 'activity';
     if ($uid == 0) {
