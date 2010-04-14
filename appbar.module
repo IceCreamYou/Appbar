@@ -361,9 +361,7 @@ function appbar_get_messages($get_new_count = FALSE) {
   //Get new alerts.
   global $user;
   $alerts = array();
-  $result = db_query("SELECT * FROM {appbar} WHERE
-    (uid = %d OR (uid = 0 AND alert_time > (SELECT created FROM {users} WHERE uid = %d)))
-    AND status = 1 ORDER BY tid DESC", $user->uid, $user->uid);
+  $result = db_query("SELECT * FROM {appbar} WHERE uid = %d AND status = 1 ORDER BY tid DESC", $user->uid, $user->uid);
   while ($row = db_fetch_object($result)) {
     $row->system = 0;
     if ($row->identifier == 'announcement' || $row->identifier == 'status') {
@@ -378,9 +376,7 @@ function appbar_get_messages($get_new_count = FALSE) {
   //We need to get at least the minimum number of alerts, so check the old ones too if necessary.
   if ($count < variable_get('appbar_min', 5)) {
     $remaining = variable_get('appbar_min', 5) - $count;
-    $result = db_query_range("SELECT * FROM {appbar} WHERE
-      (uid = %d OR (uid = 0 AND alert_time > (SELECT created FROM {users} WHERE uid = %d)))
-      AND status = 0 ORDER BY tid DESC", $user->uid, $user->uid, 0, $remaining);
+    $result = db_query_range("SELECT * FROM {appbar} WHERE uid = %d AND status = 0 ORDER BY tid DESC", $user->uid, $user->uid, 0, $remaining);
   }
   while ($row = db_fetch_object($result)) {
     $row->system = 0;
@@ -389,8 +385,10 @@ function appbar_get_messages($get_new_count = FALSE) {
     }
     $alerts[] = $row;
   }
-  
-  db_query("UPDATE {appbar} SET status = 0 WHERE status = 1 AND uid = %d", $GLOBALS['user']->uid);
+
+  if ($count > 0) {
+    db_query("UPDATE {appbar} SET status = 0 WHERE status = 1 AND uid = %d", $GLOBALS['user']->uid);
+  }
   return $alerts;
 }
 
