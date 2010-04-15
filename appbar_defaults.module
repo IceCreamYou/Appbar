@@ -57,16 +57,33 @@ function appbar_defaults_comment(&$comment, $op) {
   if ($comment->uid == $user->uid) {
     return;
   }
+  $node = db_fetch_object(db_query("SELECT n.uid, n.nid, n.title FROM {comments} c INNER JOIN {node} n ON c.nid = n.nid WHERE c.cid = %d", $comment->cid));
+  //The -other operations could potentially be slow with lots of commenters.
   if ($op == 'delete') {
     appbar_set_message(t('!user deleted your comment %comment.', array('%comment' => $comment->subject, '!user' => theme('username', user_load(array('uid' => $user->uid))))), 'comment-delete', $comment->uid);
+    appbar_set_message(t('!user deleted the comment %comment on your node !title.', array('%comment' => $comment->subject, '!user' => theme('username', user_load(array('uid' => $user->uid))), '!title' => l($node->title, 'node/'. $node->nid))), 'comment-delete-node-author', $node->uid);
     appbar_set_message(t('!user deleted the comment %comment.', array('%comment' => $comment->subject, '!user' => theme('username', user_load(array('uid' => $user->uid))))), 'comment-delete-1', 1);
+    $result = db_query("SELECT DISTINCT(uid) FROM {comments} WHERE uid <> %d AND nid = %d", $comment->uid, $comment->nid);
+    while ($account = db_fetch_object($result)) {
+      appbar_set_message(t('!user deleted the comment %comment.', array('%comment' => $comment->subject, '!user' => theme('username', user_load(array('uid' => $user->uid))))), 'comment-delete-others', $account->uid);
+    }
   }
   elseif ($op == 'insert') {
     appbar_set_message(t('!user added the comment !comment.', array('!comment' => l($comment->subject, 'node/'. $comment->nid, array('fragment' => 'comment-'. $comment->cid)), '!user' => theme('username', user_load(array('uid' => $user->uid))))), 'comment-insert-1', 1);
+    appbar_set_message(t('!user added the comment !comment on your node !title.', array('!comment' => l($comment->subject, 'node/'. $comment->nid, array('fragment' => 'comment-'. $comment->cid)), '!user' => theme('username', user_load(array('uid' => $user->uid))), '!title' => l($node->title, 'node/'. $node->nid))), 'comment-insert-node-author', $node->uid);
+    $result = db_query("SELECT DISTINCT(uid) FROM {comments} WHERE uid <> %d AND nid = %d", $comment->uid, $comment->nid);
+    while ($account = db_fetch_object($result)) {
+      appbar_set_message(t('!user added the comment !comment.', array('!comment' => l($comment->subject, 'node/'. $comment->nid, array('fragment' => 'comment-'. $comment->cid)), '!user' => theme('username', user_load(array('uid' => $user->uid))))), 'comment-insert-others', $account->uid);
+    }
   }
   elseif ($op == 'update') {
     appbar_set_message(t('!user updated your comment !comment.', array('!comment' => l($comment->subject, 'node/'. $comment->nid, array('fragment' => 'comment-'. $comment->cid)), '!user' => theme('username', user_load(array('uid' => $user->uid))))), 'comment-update', $comment->uid);
+    appbar_set_message(t('!user updated the comment !comment on your node !title.', array('!comment' => l($comment->subject, 'node/'. $comment->nid, array('fragment' => 'comment-'. $comment->cid)), '!user' => theme('username', user_load(array('uid' => $user->uid))), '!title' => l($node->title, 'node/'. $node->nid))), 'comment-update-node-author', $node->uid);
     appbar_set_message(t('!user updated the comment !comment.', array('!comment' => l($comment->subject, 'node/'. $comment->nid, array('fragment' => 'comment-'. $comment->cid)), '!user' => theme('username', user_load(array('uid' => $user->uid))))), 'comment-update-1', 1);
+    $result = db_query("SELECT DISTINCT(uid) FROM {comments} WHERE uid <> %d AND nid = %d", $comment->uid, $comment->nid);
+    while ($account = db_fetch_object($result)) {
+      appbar_set_message(t('!user updated the comment !comment.', array('!comment' => l($comment->subject, 'node/'. $comment->nid, array('fragment' => 'comment-'. $comment->cid)), '!user' => theme('username', user_load(array('uid' => $user->uid))))), 'comment-update-others', $account->uid);
+    }
   }
 }
 
@@ -89,9 +106,15 @@ function appbar_defaults_appbar_id() {
     $b = array(
       'comment-delete' => t('Comment deletion (alerts author)'),
       'comment-delete-1' => t('Comment deletion (alerts User 1)'),
+      'comment-delete-node-author' => t('Comment deletion (alerts node author)'),
+      'comment-delete-others' => t('Comment deletion (alerts other commenters in thread)'),
       'comment-insert-1' => t('Comment insertion (alerts User 1)'),
+      'comment-insert-node-author' => t('Comment insertion (alerts node author)'),
+      'comment-insert-others' => t('Comment insertion (alerts other commenters in thread)'),
       'comment-update' => t('Comment updating (alerts author)'),
       'comment-update-1' => t('Comment updating (alerts User 1)'),
+      'comment-update-node-author' => t('Comment updating (alerts node author)'),
+      'comment-update-others' => t('Comment updating (alerts other commenters in thread)'),
     );
     $a = array_merge($b, $a);
   }

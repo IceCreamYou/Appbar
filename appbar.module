@@ -658,7 +658,7 @@ function appbar_rules_action_info() {
     'appbar_action_set_message' => array(
       'label' => t('Set an alert in the Application Toolbar'),
       'module' => 'Application Toolbar',
-      'eval input' => array('message', 'account'),
+      'eval input' => array('identifier', 'message', 'account'),
     ),
   );
 }
@@ -670,14 +670,22 @@ function appbar_action_set_message($settings) {
   if ($settings['account'] == 'user') {
     $settings['account'] = $GLOBALS['user']->uid;
   }
-  appbar_set_message($settings['message'], 'misc', $settings['account']);
+  appbar_set_message($settings['message'], $settings['identifier'], $settings['account']);
 }
 
 /**
  * Configuration form for the Rules action to set an alert.
  */
 function appbar_action_set_message_form($settings, &$form) {
-  $settings += array('message' => '', 'account' => 'user');
+  $settings += array('identifier' => 'misc', 'message' => '', 'account' => 'user');
+  $form['settings']['identifier'] = array(
+    '#type' => 'select',
+    '#title' => t('Category'),
+    '#description' => t('You can set the visibility of each category in the settings.'),
+    '#required' => TRUE,
+    '#default_value' => $settings['identifier'],
+    '#options' => module_invoke_all('appbar_id'),
+  );
   $form['settings']['message'] = array(
     '#type' => 'textarea',
     '#title' => t('Message'),
