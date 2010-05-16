@@ -547,7 +547,7 @@ function _appbar_vis() {
  *   TRUE if the user's activity should NOT be recorded; FALSE otherwise.
  */
 function _appbar_hide_alerts($account) {
-  if ($account->uid == 1 && variable_get('appbar_admin', 1)) {
+  if ($account->uid == 1 && variable_get('appbar_uid1', 1)) {
     return FALSE;
   }
   return user_access("hide actions from others' appbar", $account);

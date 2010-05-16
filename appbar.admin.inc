@@ -75,11 +75,11 @@ function appbar_admin(&$form_state) {
     '#required' => TRUE,
     '#default_value' => variable_get('appbar_time', 20000),
   );
-  $form['appbar_admin'] = array(
+  $form['appbar_uid1'] = array(
     '#type' => 'checkbox',
     '#title' => t('Record alerts from User 1'),
     '#description' => t('Allows you to suppress all alerts from the super administrator.'),
-    '#default_value' => variable_get('appbar_admin', 1),
+    '#default_value' => variable_get('appbar_uid1', 1),
   );
 
   /**
@@ -181,7 +181,7 @@ function appbar_admin_types(&$form_state) {
   $form['appbar_types'] = array(
     '#type' => 'checkboxes',
     '#title' => t('Types of alerts to record'),
-    '#description' => t('Only alerts categorized in one of the categories enabled below will appear in the alert dialog.'),
+    '#description' => t('Only alerts categorized in one of the categories enabled above will appear in the alert dialog.'),
     '#default_value' => variable_get('appbar_types', array('announcement', 'misc')),
     '#options' => $types,
   );

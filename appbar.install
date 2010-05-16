@@ -72,6 +72,18 @@ function appbar_install() {
 }
 
 /**
+ * Implementation of hook_update_N().
+ */
+function appbar_update_6101() {
+  variable_set('appbar_uid1', variable_get('appbar_admin', 1));
+  variable_del('appbar_admin');
+  return array(array(
+    'success' => TRUE,
+    'query' => t('Fixed "Record alerts from User 1" setting not saving'),
+  ));
+}
+
+/**
  * Implementation of hook_uninstall().
  */
 function appbar_uninstall() {
