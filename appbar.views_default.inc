@@ -170,7 +170,7 @@ function appbar_views_default_views() {
       'default_options_div_prefix' => '',
       'default_argument_user' => 0,
       'default_argument_fixed' => '',
-      'default_argument_php' => 'return $GLOBALS[\'user\']->uid .\',0\';',
+      'default_argument_php' => 'return $GLOBALS[\'user\']->uid;',
       'validate_argument_node_type' => array(
         'page' => 0,
       ),

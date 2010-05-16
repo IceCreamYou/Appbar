@@ -123,7 +123,7 @@ function appbar_views_data() {
       'click sortable' => TRUE,
     ),
     'filter' => array(
-      'handler' => 'views_handler_filter_string',
+      'handler' => 'appbar_views_handler_filter_string_identifier',
     ),
     'argument' => array(
       'handler' => 'views_handler_argument_string',
@@ -167,6 +167,9 @@ function appbar_views_handlers() {
       ),
       'appbar_views_handler_field_read' => array(
         'parent' => 'views_handler_field',
+      ),
+      'appbar_views_handler_filter_string_identifier' => array(
+        'parent' => 'views_handler_filter_many_to_one',
       ),
     ),
   );
