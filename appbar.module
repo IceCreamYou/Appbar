@@ -776,13 +776,15 @@ function appbar_views_api() {
  * Implementation of hook_activity_messages_alter().
  */
 function appbar_activity_messages_alter($messages, $object_name, $types) {
-  foreach ($messages as $uid => $message) {
-    $id = 'activity';
-    if ($uid == 0) {
-      $uid = 'all';
-      $id = 'activity-all';
+  foreach ($messages as $language_id => $language_messages) {
+    foreach ($language_messages as $uid => $message) {
+      $id = 'activity';
+      if ($uid == 0) {
+        $uid = 'all';
+        $id = 'activity-all';
+      }
+      appbar_set_message($message, $id, $uid);
     }
-    appbar_set_message($message, $id, $uid);
   }
 }
 
