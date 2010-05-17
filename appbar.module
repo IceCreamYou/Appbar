@@ -142,6 +142,9 @@ function appbar_appbar_id() {
     $return['activity'] = t('Messages from the Activity module to a specific user.');
     $return['activity-all'] = t('Messages from the Activity module to everyone.');
   }
+  if (module_exists('messaging')) {
+    $return['messaging'] = t('Messages directed through the Messaging module.');
+  }
   return $return;
 }
 
@@ -781,4 +784,36 @@ function appbar_activity_messages_alter($messages, $object_name, $types) {
     }
     appbar_set_message($message, $id, $uid);
   }
+}
+
+/**
+ * Implementation of hook_messaging().
+ */
+function appbar_messaging($op = 'info') {
+  switch ($op) {
+    case 'send methods':
+      $info['appbar'] = array(
+        'title' => t('Appbar'),
+        'name' => t('Appbar'),
+        'group' => 'web',
+        'address_type' => 'user',
+        'type' => MESSAGING_TYPE_SEND,
+        'description' => t('Set alerts in the Appbar.'),
+        'send callback' => 'appbar_messaging_send',
+        'anonymous' => FALSE,
+        //Formatting options that may not be needed.
+        'glue' => '<br />',
+        'filter' => 'messaging_filter',
+        'format' => 'HTML',
+      );
+      return $info;
+  }
+}
+
+/**
+ * Directs a message to Appbar from the Messaging module.
+ */
+function appbar_messaging_send($uid, $message) {
+  appbar_set_message($message->get_body(), 'messaging', $uid);
+  return TRUE;
 }
