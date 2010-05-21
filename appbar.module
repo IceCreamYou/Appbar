@@ -374,6 +374,7 @@ function appbar_get_messages($get_new_count = FALSE) {
   }
   $count = count($alerts);
   if ($get_new_count) {
+    drupal_alter('appbar_count', $count); //Useful with custom views.
     return $count;
   }
   //We need to get at least the minimum number of alerts, so check the old ones too if necessary.
