@@ -9,6 +9,12 @@ Drupal.behaviors.appbar = function (context) {
   context.find('#appbar_container').show();
   context.find('#appbar_alerts').click(function() {
     $('#appbar_alerts_list').toggle();
+    if ($('#appbar_messages').css('background-image') == 'url("'+ Drupal.settings.appbar.open_path +'")') {
+      $('#appbar_messages').css('background-image', 'url("'+ Drupal.settings.appbar.close_path +'")');
+    }
+    else {
+      $('#appbar_messages').css('background-image', 'url("'+ Drupal.settings.appbar.open_path +'")');
+    }
     $('#appbar_alerts_list').load(Drupal.settings.appbar.base_path +'appbar/refresh/list');
     appbar_refresh();
   });

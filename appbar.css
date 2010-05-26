@@ -30,11 +30,13 @@
   right: 0;
 }
 
-#appbar_messages,
-#appbar_im {
+#appbar_messages {
+  background: scroll transparent url("/sites/all/modules/appbar/open.png") no-repeat right center;
   border-left: 1px #B5B5B5 solid;
   float: right;
   height: 25px;
+  margin-right: 4px;
+  padding-right: 16px;
 }
 
 #appbar_alerts {
@@ -50,7 +52,7 @@
   display: none;
   margin-bottom: -1px; /* Hide the bottom border. */
   max-height: 450px;
-  min-height: /*249*/100px;
+  min-height: 100px;
   overflow-x: hidden;
   overflow-y: auto;
   padding: 0;
