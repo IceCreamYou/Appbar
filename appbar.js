@@ -1,10 +1,13 @@
 // $Id$
 Drupal.behaviors.appbar = function (context) {
-  $('body').addClass('with-appbar');
+  if (context == document) {
+    $('body').addClass('with-appbar');
+    var interval = setInterval("appbar_refresh();", Drupal.settings.appbar.delay);
+    context = $(document);
+  }
   appbar_tn();
-  $('#appbar_container').show();
-  var interval = setInterval("appbar_refresh();", Drupal.settings.appbar.delay);
-  $('#appbar_alerts').click(function() {
+  context.find('#appbar_container').show();
+  context.find('#appbar_alerts').click(function() {
     $('#appbar_alerts_list').toggle();
     $('#appbar_alerts_list').load(Drupal.settings.appbar.base_path +'appbar/refresh/list');
     appbar_refresh();
