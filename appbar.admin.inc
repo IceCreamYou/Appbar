@@ -158,7 +158,7 @@ function appbar_admin_validate($form, &$form_state) {
 function appbar_admin_submit($form, &$form_state) {
   $message = trim(filter_xss_admin($form_state['values']['appbar_admin']));
   if ($message) {
-    appbar_set_message($message, 'announcement', 'all');
+    appbar_set_message($message, 'all');
   }
   if ($form_state['values']['appbar_css'] != variable_get('appbar_css', 'default')) {
     drupal_clear_css_cache();
