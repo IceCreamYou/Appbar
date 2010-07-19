@@ -14,7 +14,7 @@ function appbar_schema() {
   $schema['appbar'] = array(
     'description' => 'Stores alerts for the appbar module.',
     'fields' => array(
-      'tid' => array(
+      'aid' => array(
         'type' => 'serial',
         'not null' => TRUE,
         'unsigned' => TRUE,
@@ -27,38 +27,31 @@ function appbar_schema() {
         'default' => 0,
         'description' => 'The User ID of the user to whom the alert should be shown.',
       ),
-      'status' => array(
+      'is_new' => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
         'description' => 'The read/unread status of the message. 1 is unread, 0 is read.',
       ),
-      'alert_time' => array(
+      'created' => array(
         'type' => 'int',
+        'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
         'description' => 'The time the alert was recorded.',
       ),
       'message' => array(
         'type' => 'text',
-        //'length' => 1024, //Not PostgreSQL-compatible
         'not null' => TRUE,
-        //'default' => '', //Not MySQL-compatible
         'description' => 'The text of the alert message.',
-      ),
-      'identifier' => array(
-        'type' => 'varchar',
-        'length' => 255,
-        'not null' => TRUE,
-        'default' => '',
-        'description' => 'A unique identifier for the type of message.',
       ),
     ),
     'indexes' => array(
       'uid' => array('uid'),
+      'created' => array('created'),
     ),
-    'primary key' => array('tid'),
+    'primary key' => array('aid'),
   );
   return $schema;
 }
@@ -68,19 +61,9 @@ function appbar_schema() {
  */
 function appbar_install() {
   drupal_install_schema('appbar');
-  drupal_set_message(t('Appbar has been successfully installed. You should now <a href="/admin/settings/appbar">configure the settings and permissions</a>.'));
-}
-
-/**
- * Implementation of hook_update_N().
- */
-function appbar_update_6101() {
-  variable_set('appbar_uid1', variable_get('appbar_admin', 1));
-  variable_del('appbar_admin');
-  return array(array(
-    'success' => TRUE,
-    'query' => t('Fixed "Record alerts from User 1" setting not saving'),
-  ));
+  drupal_set_message(st('Appbar has been successfully installed.') .' '.
+    st('You should now <a href="/admin/settings/appbar">configure the settings and permissions</a>.')
+  );
 }
 
 /**
@@ -88,17 +71,53 @@ function appbar_update_6101() {
  */
 function appbar_uninstall() {
   drupal_uninstall_schema('appbar');
+  db_query("DELETE FROM {variable} WHERE name LIKE 'appbar_block_display_type_%%'");
   variable_del('appbar_css');
   variable_del('appbar_min');
-  variable_del('appbar_menu');
   variable_del('appbar_time');
+  variable_del('appbar_uid1');
   variable_del('appbar_view');
-  variable_del('appbar_admin');
-  variable_del('appbar_types');
   variable_del('appbar_filter');
   variable_del('appbar_hijack');
-  variable_del('appbar_regions');
   variable_del('appbar_page_vis');
   variable_del('appbar_user_vis');
   variable_del('appbar_vis_list');
+}
+
+/**
+ * Implementation of hook_update_N().
+ */
+function appbar_update_6200() {
+  $ret = array();
+  db_drop_primary_key($ret, 'appbar');
+  db_change_field($ret, 'appbar', 'tid', 'aid', array(
+      'type' => 'serial',
+      'not null' => TRUE,
+      'unsigned' => TRUE,
+      'description' => 'The Appbar alert ID.',
+    ),
+    array(
+      'primary key' => array('aid'),
+    )
+  );
+  db_change_field($ret, 'appbar', 'status', 'is_new', array(
+    'type' => 'int',
+    'unsigned' => TRUE,
+    'not null' => TRUE,
+    'default' => 0,
+    'description' => 'The read/unread status of the message. 1 is unread, 0 is read.',
+  ));
+  db_change_field($ret, 'appbar', 'alert_time', 'created', array(
+      'type' => 'int',
+      'unsigned' => TRUE,
+      'not null' => TRUE,
+      'default' => 0,
+      'description' => 'The time the alert was recorded.',
+    ),
+    array(
+      'indexes' => array('created' => array('created')),
+    )
+  );
+  db_drop_field($ret, 'appbar', 'identifier');
+  return $ret;
 }

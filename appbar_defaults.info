@@ -1,5 +1,0 @@
-; $Id$
-name = Appbar Default Notifications
-description = "Provides notifications to the Appbar about events from Drupal core."
-core = 6.x
-dependencies[] = appbar

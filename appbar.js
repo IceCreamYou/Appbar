@@ -18,6 +18,23 @@ Drupal.behaviors.appbar = function (context) {
     $('#appbar_alerts_list').load(Drupal.settings.appbar.base_path +'appbar/refresh/list');
     appbar_refresh();
   });
+  context.find('.appbar-block-popup .appbar-block-title').click(function(e) {
+    e.preventDefault();
+    var content = $(this).prev('.appbar-block-content');
+    var visible = content.slideToggle('fast').attr('display');
+    if (visible != 'none') {
+      $('.appbar-block-content:visible').not(content).hide();
+    }
+  });
+  context.find('.appbar-block-popup .appbar-minimize').click(function(e) {
+    e.preventDefault();
+    $(this).parent().parent().slideToggle('fast');
+  });
+  $('.appbar-block-popup').each(function(index) {
+    $(this).find('.appbar-block-content').css('left', $(this).css('left'));
+  });
+  $('.appbar-block:first').addClass('first');
+  $('.appbar-block:last').addClass('last');
 }
 function appbar_refresh() {
   $('#appbar_count').load(Drupal.settings.appbar.base_path +'appbar/refresh/count');

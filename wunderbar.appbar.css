@@ -6,19 +6,16 @@
   font-weight: bold;
   position: fixed;
   padding-bottom: 10px;
-}
-
-#appbar_menu {
-  z-index: 51;
+  right: 1em;
 }
 
 #appbar {
-  background-color: transparent;
+  background: url(bar_bg.png) repeat-x scroll 0 0 transparent;
   border: none;
-  padding: 0;
   float: right;
   height: 35px;
-  background: url(bar_bg.png) repeat-x scroll 0 0;
+  line-height: 35px;
+  padding: 0;
 }
 
 #appbar a:link,
@@ -28,12 +25,33 @@
   text-decoration: none;
 }
 
+#appbar a {
+  color: #007CCF;
+}
+
 #appbar a:hover {
 	color: #0099FF;
 }
 
 #appbar div {
   float: left;
+  line-height: 27px;
+  margin: 4px 0;
+}
+
+#appbar div.appbar-block {
+  margin: 0;
+}
+
+#appbar div .appbar-block-controls {
+  background: url("bar_bg.png") repeat-x scroll 0 -4px transparent;
+  clear: both;
+  float: none;
+  margin: 0;
+}
+
+.appbar-block-popup .appbar-block-content {
+  bottom: 31px;
 }
 
 .appbar-new,
@@ -41,11 +59,9 @@
   background-color: #4F4F4F;
 }
 
-#appbar_messages,
-#appbar_im {
+#appbar_messages {
   float: right;
   height: 32px;
-  padding-top: 3px;
   border-left: none;
 }
 
@@ -57,6 +73,10 @@
   font-size: 12px;
   font-weight: bold;
   color: #999999;
+  border-left: 0 none;
+  height: 24px;
+  float: left;
+  display: block;
 }
 
 #appbar_alerts:hover {
@@ -84,13 +104,6 @@
   border-left: 2px #B5B5B5 solid;
 }
 
-#appbar_items {
-  border-right: none;
-  float: left;
-  height: 35px;
-  padding-top: 3px;
-}
-
 #appbar .views-hide {
   display: none;
 }
@@ -112,23 +125,6 @@
 .appbar_time {
   font-size: 10px;
   padding-left: 0.5em;
-}
-
-.appbar-item {
-  border-right: 2px #B5B5B5 solid;
-  height: 24px;
-  float: left;
-  display: block;
-  padding-top: 5px;
-}
-
-#appbar_alerts {
-  border-right: 2px #B5B5B5 solid;
-  border-left: none;
-  height: 24px;
-  float: left;
-  display: block;
-  padding-top: 5px;
 }
 
 #appbar_sub {

@@ -13,7 +13,7 @@
 class appbar_views_handler_field_message extends views_handler_field {
   function render($values) {
     $value = $values->{$this->field_alias};
-    db_query("UPDATE {appbar} SET status = 0 WHERE status = 1 AND tid = %d", $values->appbar_tid);
+    db_query("UPDATE {appbar} SET is_new = 0 WHERE is_new = 1 AND aid = %d", $values->appbar_aid);
     return $value;
   }
 }

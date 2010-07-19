@@ -10,14 +10,6 @@
  * Settings form.
  */
 function appbar_admin(&$form_state) {
-  $form['appbar_menu'] = array(
-    '#type' => 'select',
-    '#title' => t('Menu for appbar links'),
-    '#description' => t('The first level of links from the menu chosen here will appear in the appbar.'),
-    '#required' => TRUE,
-    '#default_value' => variable_get('appbar_menu', 'secondary-links'),
-    '#options' => menu_get_menus(),
-  );
   $form['appbar_css'] = array(
     '#type' => 'select',
     '#title' => t('Style'),
@@ -171,27 +163,4 @@ function appbar_admin_submit($form, &$form_state) {
   if ($form_state['values']['appbar_css'] != variable_get('appbar_css', 'default')) {
     drupal_clear_css_cache();
   }
-}
-
-/**
- * Allows admin to choose which alert types to accept.
- */
-function appbar_admin_types(&$form_state) {
-  $types = module_invoke_all('appbar_id');
-  $form['appbar_types'] = array(
-    '#type' => 'checkboxes',
-    '#title' => t('Types of alerts to record'),
-    '#description' => t('Only alerts categorized in one of the categories enabled above will appear in the alert dialog.'),
-    '#default_value' => variable_get('appbar_types', array('announcement', 'misc')),
-    '#options' => $types,
-  );
-  $regions = drupal_map_assoc(array_keys(module_invoke_all('appbar_region')));
-  $form['appbar_regions'] = array(
-    '#type' => 'checkboxes',
-    '#title' => t('Appbar regions'),
-    '#description' => t('Enable or disable regions on the Appbar.'),
-    '#default_value' => variable_get('appbar_regions', $regions),
-    '#options' => $regions,
-  );
-  return system_settings_form($form);
 }

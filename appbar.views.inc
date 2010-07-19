@@ -19,12 +19,6 @@ function appbar_views_data() {
       'type' => 'INNER',
     ),
   );
-  $data['users']['table']['join'] = array(
-    'appbar' => array(
-      'left_field' => 'uid',
-      'field' => 'uid',
-    ),
-  );
 
   //Advertise this table as a possible base table.
   $data['appbar']['table']['base'] = array(
@@ -34,7 +28,7 @@ function appbar_views_data() {
     'weight' => 10,
   );
 
-  $data['appbar']['tid'] = array(
+  $data['appbar']['aid'] = array(
     'title' => t('Alert ID'),
     'help' => t('The ID of the Appbar alert.'),
     'field' => array(
@@ -70,9 +64,9 @@ function appbar_views_data() {
     ),
   );
 
-  $data['appbar']['status'] = array(
-    'title' => t('Read status'),
-    'help' => t('The read/unread status of the message. 1 is unread, 0 is read'),
+  $data['appbar']['is_new'] = array(
+    'title' => t('Alert is new'),
+    'help' => t('Whether the alert is read or unread. The field returns either the "appbar-new" class or nothing.'),
     'field' => array(
       'handler' => 'appbar_views_handler_field_read',
       'click sortable' => TRUE,
@@ -88,7 +82,7 @@ function appbar_views_data() {
     ),
   );
 
-  $data['appbar']['alert_time'] = array(
+  $data['appbar']['created'] = array(
     'title' => t('Alert time'),
     'help' => t('The time the alert was recorded.'),
     'field' => array(
@@ -114,43 +108,8 @@ function appbar_views_data() {
       'handler' => 'views_handler_filter_string',
     ),
   );
-  
-  $data['appbar']['identifier'] = array(
-    'title' => t('Alert type'),
-    'help' => t('The type of action that was recorded.'),
-    'field' => array(
-      'handler' => 'views_handler_field',
-      'click sortable' => TRUE,
-    ),
-    'filter' => array(
-      'handler' => 'appbar_views_handler_filter_string_identifier',
-    ),
-    'argument' => array(
-      'handler' => 'views_handler_argument_string',
-    ),
-  );
 
   return $data;
-}
-
-/**
- * Implementation of hook_views_data_alter().
- */
-function appbar_views_data_alter(&$data) {
-  $data['appbar']['users'] = array(
-    'group' => t('Application Toolbar'),
-    'relationship' => array(
-      'title' => t('Users'),
-      'label' => t('Users'),
-      'help' => t('Gain access to information about the user who will see the alerts.'),
-      'relationship table' => 'users',
-      'relationship field' => 'uid',
-      'base' => 'appbar',
-      'field' => 'uid',
-      'type' => 'INNER',
-      'handler' => 'views_handler_relationship',
-    ),
-  );
 }
 
 /**
@@ -167,9 +126,6 @@ function appbar_views_handlers() {
       ),
       'appbar_views_handler_field_read' => array(
         'parent' => 'views_handler_field',
-      ),
-      'appbar_views_handler_filter_string_identifier' => array(
-        'parent' => 'views_handler_filter_many_to_one',
       ),
     ),
   );
