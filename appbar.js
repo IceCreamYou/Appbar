@@ -11,15 +11,19 @@ Drupal.behaviors.appbar = function (context) {
   appbar_tn();
   context.find('#appbar_container').show();
   context.find('#appbar_alerts').click(function() {
-    $('#appbar_alerts_list').toggle();
-    if ($('#appbar_messages').css('background-image') == 'url("'+ Drupal.settings.appbar.open_path +'")') {
-      $('#appbar_messages').css('background-image', 'url("'+ Drupal.settings.appbar.close_path +'")');
+    var $list = $('#appbar_alerts_list');
+    var $bar = $('#appbar_messages');
+    if ($bar.css('background-image') == 'url("'+ Drupal.settings.appbar.open_path +'")') {
+      $bar.css('background-image', 'url("'+ Drupal.settings.appbar.close_path +'")');
     }
     else {
-      $('#appbar_messages').css('background-image', 'url("'+ Drupal.settings.appbar.open_path +'")');
+      $bar.css('background-image', 'url("'+ Drupal.settings.appbar.open_path +'")');
     }
-    $('#appbar_alerts_list').load(Drupal.settings.appbar.base_path +'appbar/refresh/list');
-    appbar_refresh();
+    $list.toggle();
+    if ($list.is(':visible')) {
+      $list.load(Drupal.settings.appbar.base_path +'appbar/refresh/list');
+      $('#appbar_count').html('0');
+    }
   });
   context.find('.appbar-block-popup .appbar-block-title').click(function(e) {
     e.preventDefault();
