@@ -38,10 +38,16 @@ Drupal.behaviors.appbar = function (context) {
     $(this).parent().parent().slideToggle('fast');
   });
   $('.appbar-block-popup').each(function(index) {
-    $(this).find('.appbar-block-content').css('left', $(this).css('left'));
+    //The -1 is a cheap hack to make this look better when the border is 1px.
+    var leftPos = $(this).offset().left - 1;
+    $(this).find('.appbar-block-content').css('left', leftPos);
   });
   $('.appbar-block:first').addClass('first');
   $('.appbar-block:last').addClass('last');
+  context.find('.appbar-block-controls').hover(
+    function() {$('.appbar-block-configure').show(); },
+    function() { $('.appbar-block-configure').hide(); }
+  );
 }
 function appbar_refresh() {
   $('#appbar_count').load(Drupal.settings.appbar.base_path +'appbar/refresh/count');

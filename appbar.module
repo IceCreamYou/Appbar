@@ -242,7 +242,14 @@ function theme_appbar_bar($check_vis = TRUE) {
       $blocks .= '<div class="appbar-block appbar-block-popup" id="appbar-block-'. $key .'">';
       //$block->content should be safe at this stage... at least, core assumes it is, so we will too.
       $blocks .= '<div class="appbar-block-content">'.
-        '<div class="appbar-block-controls"><span class="appbar-minimize">-</span></div>'.
+        '<div class="appbar-block-controls">';
+      if (user_access('administer blocks')) {
+        $blocks .= '<span class="appbar-block-configure">'.
+          l(t('configure'), 'admin/build/block/configure/'. $block->module .'/'. $block->delta) .
+        '</span>';
+      }
+      $blocks .= '<span class="appbar-minimize">-</span>'.
+        '</div>'.
         '<div>'. $block->content .'</div>'.
       '</div>';
       $blocks .= '<span class="appbar-block-title">';

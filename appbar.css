@@ -92,7 +92,7 @@
   border: 1px #B5B5B5 solid;
   bottom: 25px;
   display: none;
-  margin-bottom: 0;
+  margin-bottom: -1px;
   max-height: 450px;
   min-height: 25px;
   overflow-x: hidden;
@@ -107,6 +107,12 @@
   border-bottom: 1px #B5B5B5 solid;
   height: 20px;
   line-height: 20px;
+}
+
+.appbar-block-configure {
+  display: none;
+  font-size: 80%;
+  padding: 0 0.5em;
 }
 
 .appbar-minimize {
