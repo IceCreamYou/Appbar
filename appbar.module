@@ -390,12 +390,26 @@ function appbar_get_messages($get_new_count = FALSE) {
  *   The message text.
  * @param $uid
  *   The User ID of the user to whom the message should be shown. If NULL (the
- *   default) the current user will be used. 'all' sets the alert for each user.
+ *   default) the current user will be used. 'all' sets the alert for each
+ *   user. Can also take an array of User IDs.
  * @param $reset
  *   Whether to reset the cache that reduces redundant messages.
  */
 function appbar_set_message($message, $uid = NULL, $reset = FALSE) {
+  static $cache;
   global $user;
+  if (is_array($uid)) {
+    if ($reset) {
+      $cache = array();
+    }
+    foreach ($uid as $u) {
+      //Prevent nested arrays or including 'all' in the list.
+      if (is_numeric($u)) {
+        appbar_set_message($message, $u);
+      }
+    }
+    return;
+  }
   if ($uid === NULL) {
     $uid = $user->uid;
   }
@@ -407,7 +421,6 @@ function appbar_set_message($message, $uid = NULL, $reset = FALSE) {
   if ($uid === 0) {
     return;
   }
-  static $cache;
   if ($reset || !isset($cache)) {
     $cache = array();
   }
@@ -419,10 +432,17 @@ function appbar_set_message($message, $uid = NULL, $reset = FALSE) {
   }
   $cache[$uid][] = $message;
   if ($uid == 'all') {
-    $operations = array();
+    $uids = array();
     $result = db_query("SELECT uid FROM {users} WHERE uid <> 0");
     while ($account = db_fetch_object($result)) {
-      $operations[] = array('_appbar_set_message', array($message, $account->uid));
+      $uids[] = $account->uid;
+    }
+    //I have *no* idea how many messages can be safely processed at once.
+    //250 is a *completely* arbitrary guess.
+    $chunks = array_chunk($uids, 250);
+    $operations = array();
+    foreach ($chunks as $chunk) {
+      $operations[] = array('_appbar_set_message', array($message, $chunk));
     }
     batch_set(array(
       'title' => t('Processing Appbar alert to everyone'),
@@ -446,7 +466,12 @@ function appbar_set_message($message, $uid = NULL, $reset = FALSE) {
  */
 function _appbar_set_message($message, $uid, &$context) {
   appbar_set_message($message, $uid);
-  $context['results']['num']++;
+  if (is_numeric($uid) || is_null($uid)) {
+    $context['results']['num']++;
+  }
+  elseif (is_array($uid)) {
+    $context['results']['num'] += count($uid);
+  }
 }
 
 /**
