@@ -391,8 +391,10 @@ function appbar_get_messages($get_new_count = FALSE) {
  * @param $uid
  *   The User ID of the user to whom the message should be shown. If NULL (the
  *   default) the current user will be used. 'all' sets the alert for each user.
+ * @param $reset
+ *   Whether to reset the cache that reduces redundant messages.
  */
-function appbar_set_message($message, $uid = NULL) {
+function appbar_set_message($message, $uid = NULL, $reset = FALSE) {
   global $user;
   if ($uid === NULL) {
     $uid = $user->uid;
@@ -405,6 +407,17 @@ function appbar_set_message($message, $uid = NULL) {
   if ($uid === 0) {
     return;
   }
+  static $cache;
+  if ($reset || !isset($cache)) {
+    $cache = array();
+  }
+  if (!isset($cache[$uid])) {
+    $cache[$uid] = array();
+  }
+  if (in_array($message, $cache[$uid])) {
+    return;
+  }
+  $cache[$uid][] = $message;
   if ($uid == 'all') {
     $operations = array();
     $result = db_query("SELECT uid FROM {users} WHERE uid <> 0");
