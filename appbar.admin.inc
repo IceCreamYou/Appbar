@@ -73,6 +73,12 @@ function appbar_admin(&$form_state) {
     '#description' => t('Allows you to suppress all alerts from the super administrator.'),
     '#default_value' => variable_get('appbar_uid1', 1),
   );
+  $form['appbar_use_alerts'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Use the Appbar alert system'),
+    '#description' => t('If you disable this, the alert system on the right side of the Appbar will disappear.'),
+    '#default_value' => variable_get('appbar_use_alerts', 1),
+  );
 
   /**
    * This section is largely copied from block.admin.inc.

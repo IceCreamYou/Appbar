@@ -286,7 +286,7 @@ function theme_appbar_alerts() {
   //We can't allow anonymous users to see alerts because we could not mark them
   //as read using our current system. One day maybe we'll switch to using
   //$_SESSION to store the last-read date for anonymous users.
-  if ($GLOBALS['user']->uid === 0) {
+  if ($GLOBALS['user']->uid === 0 || !variable_get('appbar_use_alerts', 1)) {
     return;
   }
   //The JQuery overwrites the correct count of new messages into the following span.
@@ -591,6 +591,7 @@ function _appbar_prepare() {
       'base_path' => variable_get('clean_url', 0) ? base_path() : base_path() .'index.php?q=',
       'open_path' => $base_url .'/'. drupal_get_path('module', 'appbar') .'/open.png',
       'close_path' => $base_url .'/'. drupal_get_path('module', 'appbar') .'/close.png',
+      'use_alerts' => variable_get('appbar_use_alerts', 1),
     )), 'setting');
     _appbar_add_css();
     drupal_add_js(drupal_get_path('module', 'appbar') .'/appbar.js');

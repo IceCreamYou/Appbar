@@ -82,6 +82,7 @@ function appbar_uninstall() {
   variable_del('appbar_page_vis');
   variable_del('appbar_user_vis');
   variable_del('appbar_vis_list');
+  variable_del('appbar_use_alerts');
 }
 
 /**

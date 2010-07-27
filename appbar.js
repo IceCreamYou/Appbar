@@ -2,7 +2,9 @@
 Drupal.behaviors.appbar = function (context) {
   if (context == document) {
     $('body').addClass('with-appbar');
-    var interval = setInterval("appbar_refresh();", Drupal.settings.appbar.delay);
+    if (Drupal.settings.appbar.use_alerts) {
+      var interval = setInterval("appbar_refresh();", Drupal.settings.appbar.delay);
+    }
   }
   //Make sure we can run context.find().
   if (!(context instanceof jQuery)) {
