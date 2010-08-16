@@ -129,7 +129,7 @@ function appbar_form_block_admin_configure_alter(&$form, $form_state) {
     '#title' => t('Appbar Settings'),
     '#collapsible' => TRUE,
     '#collapsed' => $region == 'appbar' ? FALSE : TRUE,
-    '#weight' => -4,
+    '#weight' => 1,
     '#tree' => TRUE,
   );
   $form['appbar']['info'] = array(
@@ -150,6 +150,7 @@ function appbar_form_block_admin_configure_alter(&$form, $form_state) {
     '#value' => $module .'_'. $delta,
   );
   $form['#submit'][] = 'appbar_block_settings_submit';
+  $form['submit']['#weight'] = 2;
 }
 
 /**
