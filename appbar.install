@@ -61,9 +61,6 @@ function appbar_schema() {
  */
 function appbar_install() {
   drupal_install_schema('appbar');
-  drupal_set_message(st('Appbar has been successfully installed.') .' '.
-    st('You should now <a href="/admin/settings/appbar">configure the settings and permissions</a>.')
-  );
 }
 
 /**
