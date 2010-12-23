@@ -7,12 +7,10 @@ Drupal.behaviors.appbar = function (context) {
     }
   }
   //Make sure we can run context.find().
-  if (!(context instanceof jQuery)) {
-    context = $(context);
-  }
+  var ctxt = $(context);
   appbar_tn();
-  context.find('#appbar_container').show();
-  context.find('#appbar_alerts').click(function() {
+  ctxt.find('#appbar_container').show();
+  ctxt.find('#appbar_alerts').click(function() {
     var $list = $('#appbar_alerts_list');
     var $bar = $('#appbar_messages');
     if ($bar.css('background-image') == 'url("'+ Drupal.settings.appbar.open_path +'")') {
@@ -27,7 +25,15 @@ Drupal.behaviors.appbar = function (context) {
       $('#appbar_count').html('0');
     }
   });
-  context.find('.appbar-block-popup .appbar-block-title').click(function(e) {
+  ctxt.find('.appbar-block-hover').bind($.fn.hoverIntent ? 'hoverIntent' : 'hover', function() {
+    var content = $(this).find('.appbar-block-content');
+    content.slideToggle('fast');
+    //Hide other open blocks.
+    $('.appbar-block-content:visible').not(content).slideUp('fast');
+  }, function() {
+    $(this).find('.appbar-block-content').slideToggle('fast');
+  });
+  ctxt.find('.appbar-block-popup .appbar-block-title').click(function(e) {
     e.preventDefault();
     var content = $(this).prev('.appbar-block-content');
     var visible = content.slideToggle('fast').attr('display');
@@ -35,18 +41,18 @@ Drupal.behaviors.appbar = function (context) {
       $('.appbar-block-content:visible').not(content).hide();
     }
   });
-  context.find('.appbar-block-popup .appbar-minimize').click(function(e) {
+  ctxt.find('.appbar-block-popup .appbar-minimize').click(function(e) {
     e.preventDefault();
     $(this).parent().parent().slideToggle('fast');
   });
-  $('.appbar-block-popup').each(function(index) {
+  $('.appbar-block-popup,.appbar-block-hover').each(function(index) {
     //The -1 is a cheap hack to make this look better when the border is 1px.
     var leftPos = $(this).offset().left - 1;
     $(this).find('.appbar-block-content').css('left', leftPos);
   });
   $('.appbar-block:first').addClass('first');
   $('.appbar-block:last').addClass('last');
-  context.find('.appbar-block-controls').hover(
+  ctxt.find('.appbar-block-controls').hover(
     function() {$('.appbar-block-configure').show(); },
     function() { $('.appbar-block-configure').hide(); }
   );
