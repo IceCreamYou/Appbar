@@ -143,6 +143,7 @@ function appbar_form_block_admin_configure_alter(&$form, $form_state) {
     '#options' => array(
       'popup' => t('Popup (block content appears above bar when title is clicked)'),
       'inline' => t('Inline (block content appears directly on the toolbar)'),
+      'hover' => t('Hover (block content appears above bar when mouse hovers over it)'),
     ),
   );
   $form['appbar']['key'] = array(
@@ -226,9 +227,16 @@ function theme_appbar_bar($check_vis = TRUE) {
   }
   //Update the 'blocks' DB table with the blocks currently exported by modules.
   _block_rehash();
-  //Get a list of blocks in the appbar region.
+  //Get a list of blocks in the appbar region (from the Context module if necessary).
+  $block_list = array();
+  if (module_exists('context') && function_exists('context_get_plugin')) {
+    $block_list = context_get_plugin('reaction', 'block')->block_list('appbar');
+  }
+  else {
+    $block_list = block_list('appbar');
+  }
   $blocks = '';
-  foreach (block_list('appbar') as $key => $block) {
+  foreach ($block_list as $key => $block) {
     if (!isset($block->content) || !$block->content) {
       continue;
     }
@@ -265,6 +273,16 @@ function theme_appbar_bar($check_vis = TRUE) {
       }
       $blocks .= '</span>';
       $blocks .= '</div>';
+    }
+    elseif ($display_type == 'hover') {
+      //$block->content should be safe at this stage... at least, core assumes it is, so we will too.
+      $blocks .= '<div class="appbar-block appbar-block-hover" id="appbar-block-'. $key .'">
+        <div class="appbar-block-content">'. $block->content .'</div>
+        <span class="appbar-block-title">'.
+          //$block->subject is sanitized already.
+          (empty($block->subject) ? t('<no title>') : $block->subject) .
+        '</span>
+      </div>';
     }
   }
   $existing = array(
