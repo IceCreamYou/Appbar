@@ -25,14 +25,12 @@ Drupal.behaviors.appbar = function (context) {
       $('#appbar_count').html('0');
     }
   });
-  ctxt.find('.appbar-block-hover').bind($.fn.hoverIntent ? 'hoverIntent' : 'hover', function() {
-    var content = $(this).find('.appbar-block-content');
-    content.slideToggle('fast');
-    //Hide other open blocks.
-    $('.appbar-block-content:visible').not(content).slideUp('fast');
-  }, function() {
-    $(this).find('.appbar-block-content').slideToggle('fast');
-  });
+  if ($.fn.hoverIntent) {
+    ctxt.find('.appbar-block-hover').hoverIntent(appbarHoverOn, appbarHoverOff);
+  }
+  else {  
+    ctxt.find('.appbar-block-hover').hover(appbarHoverOn, appbarHoverOff);
+  }
   ctxt.find('.appbar-block-popup .appbar-block-title').click(function(e) {
     e.preventDefault();
     var content = $(this).prev('.appbar-block-content');
@@ -70,4 +68,13 @@ function appbar_tn() {
   else {
     $('#appbar_messages').removeClass('appbar-has-new');
   }
+}
+function appbarHoverOn(event) {
+  var content = $(event.currentTarget).find('.appbar-block-content');
+  content.slideToggle('fast');
+  //Hide other open blocks.
+  $('.appbar-block-content:visible').not(content).slideUp('fast');
+}
+function appbarHoverOff(event) {
+  $(event.currentTarget).find('.appbar-block-content').slideToggle('fast');
 }
