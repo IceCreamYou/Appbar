@@ -1,3 +1,4 @@
-name = Appbar
-description = "Adds an appbar to the bottom of the page for site users, like Facebook."
-core = 6.x
+name = Application Toolbar (Appbar)
+description = "Adds an appbar to the bottom of the page for site users."
+core = 7.x
+configure = admin/config/user-interface/appbar
