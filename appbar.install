@@ -22,6 +22,6 @@ function appbar_update_7000() {
   drupal_uninstall_schema('appbar');
   db_update('block')
     ->fields(array('region' => 'appbar-left'))
-    -condition('region' => 'appbar')
+    -condition('region', 'appbar')
     ->execute();
 }

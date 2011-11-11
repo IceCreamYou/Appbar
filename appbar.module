@@ -106,10 +106,13 @@ function appbar_block_settings_submit($form, $form_state) {
  */
 function appbar_appbar_css() {
   $path = drupal_get_path('module', 'appbar');
+  $blue_path = $path . '/blue.appbar.css';
+  $dark_path = $path . '/dark.appbar.css';
+  $wunderbar_path = $path . '/wunderbar.appbar.css';
   return array(
-    $blue_path => t('Blue (@path)', array('@path' => $path . '/blue.appbar.css')),
-    $dark_path => t('Dark (@path)', array('@path' => $path . '/dark.appbar.css')),
-    $wunderbar_path => t('Wunderbar (@path)', array('@path' => $path . '/wunderbar.appbar.css')),
+    $blue_path => t('Blue (@path)', array('@path' => $blue_path)),
+    $dark_path => t('Dark (@path)', array('@path' => $dark_path)),
+    $wunderbar_path => t('Wunderbar (@path)', array('@path' => $wunderbar_path)),
   );
 }
 
@@ -136,6 +139,7 @@ function theme_appbar_bar() {
   if (!user_access('use appbar')) {
     return;
   }
+  _appbar_prepare();
   // Update the 'blocks' DB table with the blocks currently exported by modules.
   _block_rehash();
   // Get a list of blocks in the appbar region (from the Context module if necessary).
@@ -144,7 +148,7 @@ function theme_appbar_bar() {
     $block_list = context_get_plugin('reaction', 'block')->block_list('appbar-left');
   }
   else {
-    $block_list = block_list('appbar');
+    $block_list = block_list('appbar-left');
   }
   $blocks = '';
   foreach ($block_list as $block) {
@@ -155,9 +159,8 @@ function theme_appbar_bar() {
     $display_type = variable_get('appbar_block_display_type_'. $key, 'popup');
     if ($display_type == 'inline') {
       // Title is ignored.
-      // $block->content should be safe at this stage.
       // Don't use normal block markup to avoid awkward styles from the theme.
-      $blocks .= '<div class="appbar-block appbar-block-inline" id="appbar-block-' . $key . '">' . $block->content . '</div>';
+      $blocks .= '<div class="appbar-block appbar-block-inline" id="appbar-block-' . $key . '">' . render($block->content) . '</div>';
     }
     elseif ($display_type == 'popup') {
       $blocks .= '<div class="appbar-block appbar-block-popup" id="appbar-block-' . $key . '">';
@@ -165,13 +168,12 @@ function theme_appbar_bar() {
         '<div class="appbar-block-controls">';
       if (user_access('administer blocks')) {
         $blocks .= '<span class="appbar-block-configure">' .
-          l(t('configure'), 'admin/build/block/configure/' . $block->module . '/' . $block->delta) .
+          l(t('configure'), 'admin/structure/block/manage/' . $block->module . '/' . $block->delta) .
         '</span>';
       }
-      // $block->content should be safe at this stage.
       $blocks .= '<span class="appbar-minimize">-</span>' .
         '</div>' .
-        '<div>' . $block->content . '</div>' .
+        '<div>' . render($block->content) . '</div>' .
       '</div>';
       $blocks .= '<span class="appbar-block-title">';
       if (!empty($block->subject)) {
@@ -187,9 +189,8 @@ function theme_appbar_bar() {
       $blocks .= '</div>';
     }
     elseif ($display_type == 'hover') {
-      // $block->content should be safe at this stage.
       $blocks .= '<div class="appbar-block appbar-block-hover" id="appbar-block-' . $key . '">
-        <div class="appbar-block-content">' . $block->content .'</div>
+        <div class="appbar-block-content">' . render($block->content) .'</div>
         <span class="appbar-block-title">' .
           // $block->subject is sanitized already.
           (empty($block->subject) ? t('<no title>') : $block->subject) .
@@ -236,7 +237,7 @@ function _appbar_add_css($list = FALSE) {
   }
   if ($list) {
     $css = array('default' => t('Default'));
-    $filedir = _appbar_add_style_by_dir(file_directory_path() . '/appbar');
+    $filedir = _appbar_add_style_by_dir(variable_get('file_public_path', conf_path() . '/files') . '/appbar');
     $appbardir = _appbar_add_style_by_dir('sites/all/appbar');
     $imported = module_invoke_all('appbar_css');
     return array_merge($css, $filedir, $appbardir, $imported);
