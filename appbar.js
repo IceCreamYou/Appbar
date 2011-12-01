@@ -24,10 +24,15 @@ Drupal.behaviors.appbar = {
       e.preventDefault();
       $(this).parent().parent().slideToggle('fast');
     });
-    $('.appbar-block-popup,.appbar-block-hover', context).each(function(index) {
+    $('#appbar-blocks-left .appbar-block-popup, #appbar-blocks-left .appbar-block-hover', context).each(function(index) {
       // The -1 is a cheap hack to make this look better when the border is 1px.
       var leftPos = $(this).offset().left - 1;
       $(this).find('.appbar-block-content').css('left', leftPos);
+    });
+    $('#appbar-blocks-right .appbar-block-popup, #appbar-blocks-right .appbar-block-hover', context).each(function(index) {
+      var t = $(this);
+      var leftMar = t.outerWidth() - t.find('.appbar-block-content').outerWidth() - (parseInt(t.css('padding-right')) || 0) + 1;
+      t.find('.appbar-block-content').css('margin-left', leftMar);
     });
     $('.appbar-block:first', context).addClass('first');
     $('.appbar-block:last', context).addClass('last');
